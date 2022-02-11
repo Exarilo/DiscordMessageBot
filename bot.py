@@ -1,5 +1,4 @@
 from pickle import TRUE
-from turtle import position
 import discord
 from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
 import discord.ext.commands as commands
