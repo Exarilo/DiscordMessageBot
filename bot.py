@@ -26,14 +26,9 @@ api = twitter.Api(consumer_key=os.getenv("twitterconsumer_key"),
 #----------------------------------------------COMMON-----------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------    
 
-@client.command()
-async def begin(ctx):
-    #await ctx.guild.create_category_channel("Reseaux Sociaux")
-    channelToCreate=["✅twitter","instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
-    for i in range(len(channelToCreate)):
-        await ctx.guild.create_text_channel(channelToCreate[i],position=i)
+async def createButton(ctx,channels):
+    channelToCreate=channels
     existing_channel = discord.utils.get(ctx.guild.channels).guild.channels
-    
     for j in range (len(channelToCreate)):
         for k in range (len(existing_channel)):
             if(channelToCreate[j] in existing_channel[k].name):
@@ -42,6 +37,16 @@ async def begin(ctx):
                     ])
     while True:
         interaction = await client.wait_for("button_click")
+
+@client.command()
+async def begin(ctx):
+    #await ctx.guild.create_category_channel("Reseaux Sociaux")
+    channelToCreate=["✅twitter","instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
+    
+    for i in range(len(channelToCreate)):
+        await ctx.guild.create_text_channel(channelToCreate[i],position=i)
+    existing_channel = discord.utils.get(ctx.guild.channels).guild.channels
+    await createButton(ctx,channelToCreate)
 
 @client.command()
 async def stop(ctx):
@@ -61,8 +66,10 @@ async def on_button_click(interaction):
         if interaction.channel.name =="✅twitter":
             await interaction.channel.last_message.delete()
             await updateTwitter(ctx=interaction.channel)
+            await createButton(interaction.channel,channels = [interaction.channel.name])
     if interaction.component.label =="Delete Messages":
-        await interaction.channel.purge()    
+        await interaction.channel.purge()  
+        await createButton(interaction.channel,channels = [interaction.channel.name])  
 
 @client.command()
 async def pdf(ctx):
@@ -158,7 +165,7 @@ async def select(ctx):
             select_interaction = await client.wait_for("select_option")
             await select_interaction.send(content = f"{select_interaction.values[0]} selected!", ephemeral = False)
         except:
-            await ctx.send("urmom")
+            await ctx.send("test")
     
 
 client.run(os.getenv("token"))
