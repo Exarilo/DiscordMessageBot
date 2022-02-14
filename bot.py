@@ -97,6 +97,8 @@ async def pdf(ctx):
 #---------------------------------------------------------------------------------------------------------------------    
 #----------------------------------------------TWITTER-----------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------   
+tweetByIDs = {}  #Key =Discord chat ID #Value = tweetID
+
 
 async def updateTwitter(ctx):
     Mentions = api.GetMentions(return_json=True) 
@@ -117,34 +119,46 @@ async def updateTwitter(ctx):
             OriginalText=OriginalTweet["text"]
             OriginalName=OriginalTweet["user"]["name"]
             OriginalProfilImage=OriginalTweet["user"]["profile_image_url"]
-            
             embed=discord.Embed(title=OriginalName,url="https://twitter.com/home", description=OriginalText, color=discord.Color.blue())   
             embed.set_image(url=OriginalProfilImage)
+            message =await ctx.send("**--------------------- New Message ---------------------**",embed=embed)
+            tweetByIDs[message.id] = OriginalTweet['id']
+            await message.add_reaction('❌')
             isOriginalFound=True
-            await ctx.send("**--------------------- New Message ---------------------**",embed=embed)
-        isOriginalFound=True
         embed=discord.Embed(title=ReplyName,url="https://twitter.com/home", description=Replytext, color=discord.Color.red())   
         embed.set_thumbnail(url=ReplyProfilImage)
-        await ctx.send(embed=embed)   
+        message = await ctx.send(embed=embed)  
+        tweetByIDs[message.id] = ReplytweetID
+        await message.add_reaction('❌') 
 
+            
+@client.event
+async def on_reaction_add(reaction, user):
+    if user != client.user:
+        if str(reaction.emoji) == "❌":
+            await reaction.message.delete()
+    
 
 
 @client.command()
 async def send(ctx,*,name):
-    api.PostUpdate(status=name)
+    if(ctx.message.mentions[0].name=="MessagesBot"):
+        api.PostUpdate(in_reply_to_status_id=int(tweetByIDs.get(ctx.message.reference.message_id)), status=name)
+    else:
+        api.PostUpdate(status=name)
+
+    #PARAM = {"text": mytext, "reply": {"in_reply_to_tweet_id": id}}
+
     await ctx.channel.send("Message sended !")
-    
+
+
 #---------------------------------------------------------------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------      
 
-
-
-
-
-
-
-
+@client.event
+async def on_ready():
+    print('Ready!')
 
 
 
