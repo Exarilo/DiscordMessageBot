@@ -122,13 +122,13 @@ async def updateTwitter(ctx):
             embed=discord.Embed(title=OriginalName,url="https://twitter.com/home", description=OriginalText, color=discord.Color.blue())   
             embed.set_image(url=OriginalProfilImage)
             message =await ctx.send("**--------------------- New Message ---------------------**",embed=embed)
-            tweetByIDs[message.id] = OriginalTweet['id']
+            tweetByIDs[message.id] =[OriginalTweet['id'],OriginalTweet["user"]["name"]]
             await message.add_reaction('❌')
             isOriginalFound=True
         embed=discord.Embed(title=ReplyName,url="https://twitter.com/home", description=Replytext, color=discord.Color.red())   
         embed.set_thumbnail(url=ReplyProfilImage)
         message = await ctx.send(embed=embed)  
-        tweetByIDs[message.id] = ReplytweetID
+        tweetByIDs[message.id] = [ReplytweetID,Mentions[i]['in_reply_to_screen_name']]
         await message.add_reaction('❌') 
 
             
@@ -141,11 +141,12 @@ async def on_reaction_add(reaction, user):
 
 
 @client.command()
-async def send(ctx,*,name):
+async def send(ctx,*,message):
     if(ctx.message.mentions[0].name=="MessagesBot"):
-        api.PostUpdate(in_reply_to_status_id=int(tweetByIDs.get(ctx.message.reference.message_id)), status=name)
+        api.PostUpdate(in_reply_to_status_id=int(tweetByIDs.get(ctx.message.reference.message_id)[0]), status="@"+tweetByIDs.get(ctx.message.reference.message_id)[1]+" "+message)
+        
     else:
-        api.PostUpdate(status=name)
+        api.PostUpdate(status=message,auto_populate_reply_metadata=True)
 
     #PARAM = {"text": mytext, "reply": {"in_reply_to_tweet_id": id}}
 
