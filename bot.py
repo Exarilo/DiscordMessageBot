@@ -10,6 +10,25 @@ import requests
 from PIL import Image
 from dotenv import load_dotenv
 import os
+from flask import Flask, request
+from instagrapi import Client
+
+cl = Client()
+cl.login("koalasournois2@gmail.com", "dbbe89275c")
+
+user_id = cl.user_id_from_username("romain_madery")
+medias = cl.user_medias(user_id, 20)
+media = cl.photo_upload(
+    "img.jpg",
+    "Test caption for photo with #hashtags and mention users such @adw0rd",
+    extra_data={
+        "custom_accessibility_caption": "alt text example",
+        "like_and_view_counts_disabled": 1,
+        "disable_comments": 1,
+    }
+)
+a=1
+
 
 #---------------------------------------------------------------------------------------------------------------------    
 #-----------------------------------------------VAR-------------------------------------------------------------------    
