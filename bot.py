@@ -1,3 +1,4 @@
+import imp
 from pickle import TRUE
 import discord
 from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
@@ -10,24 +11,9 @@ import requests
 from PIL import Image
 from dotenv import load_dotenv
 import os
-from flask import Flask, request
 from instagrapi import Client
 
-cl = Client()
-cl.login("koalasournois2@gmail.com", "dbbe89275c")
-
-user_id = cl.user_id_from_username("romain_madery")
-medias = cl.user_medias(user_id, 20)
-media = cl.photo_upload(
-    "img.jpg",
-    "Test caption for photo with #hashtags and mention users such @adw0rd",
-    extra_data={
-        "custom_accessibility_caption": "alt text example",
-        "like_and_view_counts_disabled": 1,
-        "disable_comments": 1,
-    }
-)
-a=1
+#from flask import Flask, request
 
 
 #---------------------------------------------------------------------------------------------------------------------    
@@ -173,8 +159,103 @@ async def send(ctx,*,message):
 
 
 #---------------------------------------------------------------------------------------------------------------------    
-#---------------------------------------------------------------------------------------------------------------------    
-#---------------------------------------------------------------------------------------------------------------------      
+#----------------------------------------------INSTAGRAM--------------------------------------------------------------    
+#---------------------------------------------------------------------------------------------------------------------        
+@client.command()
+async def test(ctx):
+    await get_medias("romain_madery")
+
+
+cl = Client()
+cl.login("koalasournois2@gmail.com", "dbbe89275c")
+
+
+#exarilosuperbot=user_id = cl.user_id_from_username(username)
+#https://www.instagram.com/exarilosuperbot/?__a=1
+#jsonDeseralize
+'''
+def get_medias(hashtags,
+               ht_type='top',
+               amount=27,
+               ):
+    ht_medias = []
+    for hashtag in hashtags:
+        if ht_type == 'top':
+            ht_medias.extend(
+                cl.hashtag_medias_top(
+                    name=hashtag,
+                    amount=amount if amount <= 9 else 9
+                )
+            )
+        elif ht_type == 'recent':
+            ht_medias.extend(
+                cl.hashtag_medias_recent(
+                    name=hashtag,
+                    amount=amount
+                )
+            )
+    return list(dict([(media.pk, media) for media in ht_medias]).values())
+
+def getMedias(username: str, amount: int = 5) -> dict:
+    amount = int(amount)
+    user_id = cl.user_id_from_username(username)
+    medias = cl.user_medias(user_id)
+    result = {}
+    i = 0
+    for m in medias:
+        if i >= amount:
+            break
+        paths = []
+        if m.media_type == 1:
+            # Photo
+            paths.append(cl.photo_download(m.pk))
+        elif m.media_type == 2 and m.product_type == 'feed':
+            # Video
+            paths.append(cl.video_download(m.pk))
+        elif m.media_type == 2 and m.product_type == 'igtv':
+            # IGTV
+            paths.append(cl.video_download(m.pk))
+        elif m.media_type == 2 and m.product_type == 'clips':
+            # Reels
+            paths.append(cl.video_download(m.pk))
+        elif m.media_type == 8:
+            # Album
+            for path in cl.album_download(m.pk):
+                paths.append(path)
+        result[m.pk] = paths
+        print(f'http://instagram.com/p/{m.code}/', paths)
+        i += 1
+    return 
+
+
+'''
+
+
+
+'''
+user_id = cl.user_id_from_username("romain_madery")
+medias = cl.user_medias(user_id, 20)
+media = cl.photo_upload(
+    "img.jpg",
+    "Test caption for photo with #hashtags and mention users such @adw0rd",
+    extra_data={
+        "custom_accessibility_caption": "alt text example",
+        "like_and_view_counts_disabled": 1,
+        "disable_comments": 1,
+    }
+)
+
+
+'''
+
+
+
+
+
+
+
+
+
 
 @client.event
 async def on_ready():
