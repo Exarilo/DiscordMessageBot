@@ -1,4 +1,3 @@
-import imp
 from pickle import TRUE
 import discord
 from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
@@ -162,6 +161,8 @@ async def send(ctx,*,message):
 #---------------------------------------------------------------------------------------------------------------------    
 #----------------------------------------------INSTAGRAM--------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------        
+cl = Client()
+cl.login(os.getenv("instamail"), os.getenv("instamdp"))
 InstagramInfo = {} 
 
 @client.command()
@@ -200,41 +201,50 @@ def get_concat_v(im1, im2):
     return dst
 
 
-cl = Client()
-cl.login("romain.madery92@gmail.com", "dbbe89275c")
+
 @client.command()
 async def test(ctx):
+    async with ctx.channel.typing():
+        user_id = cl.user_id_from_username("_cryde")
+        medias = cl.user_medias(user_id, 30)
+        if(len(medias)<=0):
+            await ctx.channel.send("No images found")
+            return
+        elif (len(medias)==1):
+            await ctx.channel.send(medias[0].thumbnail_url)
+            return
 
-    user_id = cl.user_id_from_username("_cryde")
-    medias = cl.user_medias(user_id, 20)
-    if(len(medias)<=0):
-        await ctx.channel.send("No images found")
-        return
+        #Photo - When media_type=1
+        #Video - When media_type=2 and product_type=feed
+        #IGTV - When media_type=2 and product_type=igtv
+        #Reel - When media_type=2 and product_type=clips
+        #Album - When media_type=8
 
+        listPhoto=[]
+        
+        for i in range (len(medias)):
+            if(medias[i].media_type==1):
+                listPhoto.append(medias[i].thumbnail_url)
+        imageToSend=""
 
-    #Photo - When media_type=1
-    #Video - When media_type=2 and product_type=feed
-    #IGTV - When media_type=2 and product_type=igtv
-    #Reel - When media_type=2 and product_type=clips
-    #Album - When media_type=8
+        for j in range (len(listPhoto)-1):
+            if(imageToSend==""):
+                imagToConcat1 = Image.open(BytesIO(requests.get(listPhoto[j]).content))
+                imagToConcat2 = Image.open(BytesIO(requests.get(listPhoto[j+1]).content))
+                imageToSend=get_concat_h(imagToConcat1, imagToConcat2)
+            else:
+                if(j>3 and j%3==0):
+                    imageToSend=get_concat_v(imageToSend, Image.open(BytesIO(requests.get(listPhoto[j+1]).content)))
+                else:
+                    imageToSend=get_concat_h(imageToSend, Image.open(BytesIO(requests.get(listPhoto[j+1]).content)))
+                    
+        
 
-    listPhoto=[]
-    for i in range (len(medias)):
-        if(medias[i].media_type==1):
-            listPhoto.append(medias[i].thumbnail_url)
-
-    for j in range (len(listPhoto)-1):
-        imageToSend = Image.open(BytesIO(requests.get(listPhoto[j]).content))
-        imagToConcat = Image.open(BytesIO(requests.get(listPhoto[j+1]).content))
-        imageToSend=get_concat_h(imageToSend, imagToConcat)
-
-
-
-    with BytesIO() as image_binary:
-                    imageToSend.save(image_binary, 'PNG')
-                    image_binary.seek(0)
-                    await ctx.send(file=discord.File(fp=image_binary, filename='image.png'))
-    a=1
+        with BytesIO() as image_binary:
+                        imageToSend.save(image_binary, 'PNG')
+                        image_binary.seek(0)
+                        await ctx.send(file=discord.File(fp=image_binary, filename='image.png'))
+        a=1
     '''
     api_url = "https://www.instagram.com/exarilosuperbot/channel/?__a=1"
     response = requests.get(api_url)
