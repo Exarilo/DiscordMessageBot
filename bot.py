@@ -11,6 +11,7 @@ import requests
 from PIL import Image
 from dotenv import load_dotenv
 import os
+import numpy as np
 from instagrapi import Client
 
 #from flask import Flask, request
@@ -161,13 +162,102 @@ async def send(ctx,*,message):
 #---------------------------------------------------------------------------------------------------------------------    
 #----------------------------------------------INSTAGRAM--------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------        
+InstagramInfo = {} 
+
 @client.command()
-async def test(ctx):
-    await get_medias("romain_madery")
+async def test2(ctx):
+    embed1=discord.Embed(
+    title="LISTE DES COMMANDES",
+        color=discord.Color.blue())
+    embed1.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/fr/thumb/2/2a/Penguin_books.svg/1200px-Penguin_books.svg.png")
+    embed1.set_image(url="https://snworksceo.imgix.net/dtc/10ec0a64-8f9d-46d9-acee-5ef9094d229d.sized-1000x1000.jpg?w=1000")
+    embed1.add_field(name="`!categorie <nom>`", value="Crée une categorie avec le nom spécifié dans <nom>)", inline=False)    
+
+    embed=discord.Embed(
+    title="LISTE DES COMMANDES",
+        color=discord.Color.blue())
+    embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/fr/thumb/2/2a/Penguin_books.svg/1200px-Penguin_books.svg.png")
+    embed.set_image(url="https://snworksceo.imgix.net/dtc/10ec0a64-8f9d-46d9-acee-5ef9094d229d.sized-1000x1000.jpg?w=1000")
+    embed.add_field(name="`!categorie <nom>`", value="Crée une categorie avec le nom spécifié dans <nom>)", inline=False)        
+    
+    
+    url="https://discord.com/api/webhooks/943519534961287178/lMjcnpW3JGzCG9Zop6RFo4z6Z4MYnWVx5_pIyTysWD878i3dL6KvdHkTjZzBIdJqsdR7"
+
+    await ctx.message.create_webhook(name="mywebhook")
+    a=1
+    #https://discord.com/api/webhooks/943519534961287178/lMjcnpW3JGzCG9Zop6RFo4z6Z4MYnWVx5_pIyTysWD878i3dL6KvdHkTjZzBIdJqsdR7
+
+def get_concat_h(im1, im2):
+    dst = Image.new('RGB', (im1.width + im2.width, im1.height))
+    dst.paste(im1, (0, 0))
+    dst.paste(im2, (im1.width, 0))
+    return dst
+
+def get_concat_v(im1, im2):
+    dst = Image.new('RGB', (im1.width, im1.height + im2.height))
+    dst.paste(im1, (0, 0))
+    dst.paste(im2, (0, im1.height))
+    return dst
 
 
 cl = Client()
-cl.login("koalasournois2@gmail.com", "dbbe89275c")
+cl.login("romain.madery92@gmail.com", "dbbe89275c")
+@client.command()
+async def test(ctx):
+
+    user_id = cl.user_id_from_username("_cryde")
+    medias = cl.user_medias(user_id, 20)
+    if(len(medias)<=0):
+        await ctx.channel.send("No images found")
+        return
+
+
+    #Photo - When media_type=1
+    #Video - When media_type=2 and product_type=feed
+    #IGTV - When media_type=2 and product_type=igtv
+    #Reel - When media_type=2 and product_type=clips
+    #Album - When media_type=8
+
+    listPhoto=[]
+    for i in range (len(medias)):
+        if(medias[i].media_type==1):
+            listPhoto.append(medias[i].thumbnail_url)
+
+    for j in range (len(listPhoto)-1):
+        imageToSend = Image.open(BytesIO(requests.get(listPhoto[j]).content))
+        imagToConcat = Image.open(BytesIO(requests.get(listPhoto[j+1]).content))
+        imageToSend=get_concat_h(imageToSend, imagToConcat)
+
+
+
+    with BytesIO() as image_binary:
+                    imageToSend.save(image_binary, 'PNG')
+                    image_binary.seek(0)
+                    await ctx.send(file=discord.File(fp=image_binary, filename='image.png'))
+    a=1
+    '''
+    api_url = "https://www.instagram.com/exarilosuperbot/channel/?__a=1"
+    response = requests.get(api_url)
+    response=response.json()
+    InstagramInfo["username"] =response['graphql']['user']['full_name']
+    InstagramInfo["id"] =response['graphql']['user']['id']
+    InstagramInfo["userPicture"] =response['graphql']['user']['profile_pic_url_hd']
+    InstagramInfo["userPageId"] =response['logging_page_id']
+    node1=response['graphql']['user']['edge_owner_to_timeline_media']['edges']
+    listImg=[]
+    listMessages=[]
+    for i in range(len(node1)) :
+        listImg.append(response['graphql']['user']['edge_owner_to_timeline_media']['edges'][i]['node']['display_url'])
+        node2=response['graphql']['user']['edge_owner_to_timeline_media']['edges'][0]['node']['edge_media_to_caption']['edges']
+        for j in range(len(node2)) :
+            listMessages.append(response['graphql']['user']['edge_owner_to_timeline_media']['edges'][i]['node']['edge_media_to_caption']['edges'][j]['node']['text'])
+    InstagramInfo["userPostsImg"] =listImg
+    InstagramInfo["userPostsMessages"] =listMessages
+    a=1
+    #await get_medias("romain_madery")
+    '''
+
+
 
 
 #exarilosuperbot=user_id = cl.user_id_from_username(username)
