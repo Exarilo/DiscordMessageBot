@@ -1,3 +1,4 @@
+from email import message
 from pickle import TRUE
 import discord
 from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
@@ -37,9 +38,10 @@ async def createButton(ctx,channels):
     for j in range (len(channelToCreate)):
         for k in range (len(existing_channel)):
             if(channelToCreate[j] in existing_channel[k].name):
-                await ctx.guild.channels[k].send("What do you want to do?",components = [
-                    [Button(label="Update channel", style="3", custom_id="button1"), Button(label="Delete Messages", style="4", custom_id="button2")]
-                    ])
+                if(channelToCreate[j] =="instagram"):
+                    await ctx.guild.channels[k].send("What do you want to do?",components = [[Button(label="Feed", style="1", custom_id="btFeed"),Button(label="Update channel", style="3", custom_id="btUpdate"), Button(label="Delete Messages", style="4", custom_id="btDelete")]])
+                else:
+                    await ctx.guild.channels[k].send("What do you want to do?",components = [[Button(label="Update channel", style="3", custom_id="btUpdate"), Button(label="Delete Messages", style="4", custom_id="btDelete")]])
     while True:
         interaction = await client.wait_for("button_click")
 
@@ -67,6 +69,10 @@ async def stop(ctx):
 
 @client.event
 async def on_button_click(interaction):
+    if interaction.component.label =="Feed":
+        await interaction.channel.last_message.delete()
+        await feed(ctx=interaction.channel)
+        await createButton(interaction.channel,channels = [interaction.channel.name])
     if interaction.component.label =="Update channel":
         if interaction.channel.name =="✅twitter":
             await interaction.channel.last_message.delete()
@@ -161,33 +167,24 @@ async def send(ctx,*,message):
 #---------------------------------------------------------------------------------------------------------------------    
 #----------------------------------------------INSTAGRAM--------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------        
+MessageByUser = {}
+
 cl = Client()
 cl.login(os.getenv("instamail"), os.getenv("instamdp"))
 InstagramInfo = {} 
 
 @client.command()
 async def test2(ctx):
-    embed1=discord.Embed(
-    title="LISTE DES COMMANDES",
-        color=discord.Color.blue())
-    embed1.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/fr/thumb/2/2a/Penguin_books.svg/1200px-Penguin_books.svg.png")
-    embed1.set_image(url="https://snworksceo.imgix.net/dtc/10ec0a64-8f9d-46d9-acee-5ef9094d229d.sized-1000x1000.jpg?w=1000")
-    embed1.add_field(name="`!categorie <nom>`", value="Crée une categorie avec le nom spécifié dans <nom>)", inline=False)    
-
-    embed=discord.Embed(
-    title="LISTE DES COMMANDES",
-        color=discord.Color.blue())
-    embed.set_thumbnail(url="https://upload.wikimedia.org/wikipedia/fr/thumb/2/2a/Penguin_books.svg/1200px-Penguin_books.svg.png")
-    embed.set_image(url="https://snworksceo.imgix.net/dtc/10ec0a64-8f9d-46d9-acee-5ef9094d229d.sized-1000x1000.jpg?w=1000")
-    embed.add_field(name="`!categorie <nom>`", value="Crée une categorie avec le nom spécifié dans <nom>)", inline=False)        
+    thread = cl.direct_threads(1)[0]
+    messages=cl.direct_threads(1)[0].messages
+    for i in range (len(messages)):
+        MessageByUser[messages[0].user_id] =[messages[i].id,messages[i].text]
     
-    
-    url="https://discord.com/api/webhooks/943519534961287178/lMjcnpW3JGzCG9Zop6RFo4z6Z4MYnWVx5_pIyTysWD878i3dL6KvdHkTjZzBIdJqsdR7"
-
-    await ctx.message.create_webhook(name="mywebhook")
+    #thread.messages[0]
+    #thread.users
+    #cl.direct_pending_inbox(10) dont work
+    #cl.direct_answer(thread.id, 'Hello!')
     a=1
-    #https://discord.com/api/webhooks/943519534961287178/lMjcnpW3JGzCG9Zop6RFo4z6Z4MYnWVx5_pIyTysWD878i3dL6KvdHkTjZzBIdJqsdR7
-
 def get_concat_h(im1, im2):
     dst = Image.new('RGB', (im1.width + im2.width, im1.height))
     dst.paste(im1, (0, 0))
@@ -202,16 +199,16 @@ def get_concat_v(im1, im2):
 
 
 
-@client.command()
-async def test(ctx):
-    async with ctx.channel.typing():
-        user_id = cl.user_id_from_username("_cryde")
+
+async def feed(ctx):
+    async with ctx.typing():
+        user_id = cl.user_id_from_username("exarilosuperbot")
         medias = cl.user_medias(user_id, 30)
         if(len(medias)<=0):
-            await ctx.channel.send("No images found")
+            await ctx.send("No images found")
             return
         elif (len(medias)==1):
-            await ctx.channel.send(medias[0].thumbnail_url)
+            await ctx.send(medias[0].thumbnail_url)
             return
 
         #Photo - When media_type=1
@@ -221,22 +218,33 @@ async def test(ctx):
         #Album - When media_type=8
 
         listPhoto=[]
+        listPhotoHorizontal=[]
         
         for i in range (len(medias)):
             if(medias[i].media_type==1):
                 listPhoto.append(medias[i].thumbnail_url)
         imageToSend=""
-
+        cpt=0
         for j in range (len(listPhoto)-1):
             if(imageToSend==""):
                 imagToConcat1 = Image.open(BytesIO(requests.get(listPhoto[j]).content))
                 imagToConcat2 = Image.open(BytesIO(requests.get(listPhoto[j+1]).content))
                 imageToSend=get_concat_h(imagToConcat1, imagToConcat2)
+                cpt+=1
             else:
-                if(j>3 and j%3==0):
-                    imageToSend=get_concat_v(imageToSend, Image.open(BytesIO(requests.get(listPhoto[j+1]).content)))
-                else:
-                    imageToSend=get_concat_h(imageToSend, Image.open(BytesIO(requests.get(listPhoto[j+1]).content)))
+                imageToSend=get_concat_h(imageToSend, Image.open(BytesIO(requests.get(listPhoto[j+1]).content)))
+                cpt+=1
+                if(cpt==3):
+                    listPhotoHorizontal.append(imageToSend)
+                    imageToSend=""
+                    cpt=0
+                    j+=1
+
+        for i in range (len(listPhotoHorizontal)):
+            if(i==0):
+                imageToSend=listPhotoHorizontal[i]
+            else:
+                imageToSend=get_concat_v(imageToSend, listPhotoHorizontal[i])
                     
         
 
