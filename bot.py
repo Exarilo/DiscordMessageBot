@@ -175,10 +175,9 @@ InstagramInfo = {}
 
 @client.command()
 async def test2(ctx):
-    thread = cl.direct_threads(1)[0]
     messages=cl.direct_threads(1)[0].messages
     for i in range (len(messages)):
-        MessageByUser[messages[0].user_id] =[messages[i].id,messages[i].text]
+        MessageByUser[messages[i].id] =[messages[i].user_id,messages[i].text]
     
     #thread.messages[0]
     #thread.users
