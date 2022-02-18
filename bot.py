@@ -38,7 +38,7 @@ async def createButton(ctx,channels):
     for j in range (len(channelToCreate)):
         for k in range (len(existing_channel)):
             if(channelToCreate[j] in existing_channel[k].name):
-                if(channelToCreate[j] =="instagram"):
+                if(channelToCreate[j] =="✅instagram"):
                     await ctx.guild.channels[k].send("What do you want to do?",components = [[Button(label="Feed", style="1", custom_id="btFeed"),Button(label="Update channel", style="3", custom_id="btUpdate"), Button(label="Delete Messages", style="4", custom_id="btDelete")]])
                 else:
                     await ctx.guild.channels[k].send("What do you want to do?",components = [[Button(label="Update channel", style="3", custom_id="btUpdate"), Button(label="Delete Messages", style="4", custom_id="btDelete")]])
@@ -48,7 +48,7 @@ async def createButton(ctx,channels):
 @client.command()
 async def begin(ctx):
     #await ctx.guild.create_category_channel("Reseaux Sociaux")
-    channelToCreate=["✅twitter","instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
+    channelToCreate=["✅twitter","✅instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
     
     for i in range(len(channelToCreate)):
         await ctx.guild.create_text_channel(channelToCreate[i],position=i)
@@ -57,7 +57,7 @@ async def begin(ctx):
 
 @client.command()
 async def stop(ctx):
-    channelToDelete=["✅twitter","instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
+    channelToDelete=["✅twitter","✅instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
 
     existing_channel = discord.utils.get(ctx.guild.channels).guild.channels
     for i in range (len(channelToDelete)):
@@ -74,10 +74,12 @@ async def on_button_click(interaction):
         await feed(ctx=interaction.channel)
         await createButton(interaction.channel,channels = [interaction.channel.name])
     if interaction.component.label =="Update channel":
+        await interaction.channel.purge()  
         if interaction.channel.name =="✅twitter":
-            await interaction.channel.last_message.delete()
             await updateTwitter(ctx=interaction.channel)
-            await createButton(interaction.channel,channels = [interaction.channel.name])
+        elif interaction.channel.name =="✅instagram":
+            await updateInstagram(ctx=interaction.channel)    
+        await createButton(interaction.channel,channels = [interaction.channel.name])
     if interaction.component.label =="Delete Messages":
         await interaction.channel.purge()  
         await createButton(interaction.channel,channels = [interaction.channel.name])  
@@ -173,15 +175,26 @@ cl = Client()
 cl.login(os.getenv("instamail"), os.getenv("instamdp"))
 InstagramInfo = {} 
 
-@client.command()
-async def test2(ctx):
-    messages=cl.direct_threads(1)[0].messages
-    for i in range (len(messages)):
-        MessageByUser[messages[i].id] =[messages[i].user_id,messages[i].text]
-    
-    #thread.messages[0]
-    #thread.users
-    #cl.direct_pending_inbox(10) dont work
+
+async def updateInstagram(ctx):
+    #MessageByUser[messages[i].id] =[messages[i].user_id,messages[i].text,userInfo.full_name,userInfo.profile_pic_url]
+    async with ctx.typing():
+        messages=cl.direct_threads(1)[0].messages
+        for i in range (len(messages)):
+            userInfo=cl.user_info(messages[i].user_id)
+            userName=userInfo.full_name    
+            if(userName=="ExariloSuperBot"): 
+                color=discord.Color.blue()
+            else:
+                color=discord.Color.red()
+            embed=discord.Embed(title=userName,url="https://www.instagram.com/", description=messages[i].text, color=color)   
+            embed.set_thumbnail(url= userInfo.profile_pic_url)
+            message =await ctx.send(embed=embed)       
+
+
+
+
+
     #cl.direct_answer(thread.id, 'Hello!')
     a=1
 def get_concat_h(im1, im2):
