@@ -13,9 +13,8 @@ from dotenv import load_dotenv
 import os
 import numpy as np
 from instagrapi import Client
-
-#from flask import Flask, request
-
+from twython import Twython
+import webbrowser
 
 #---------------------------------------------------------------------------------------------------------------------    
 #-----------------------------------------------VAR-------------------------------------------------------------------    
@@ -28,7 +27,47 @@ api = twitter.Api(consumer_key=os.getenv("twitterconsumer_key"),
                   access_token_key=os.getenv("twitteraccess_token_key"),
                   access_token_secret=os.getenv("twitteraccess_token_secret"))
 
-#---------------------------------------------------------------------------------------------------------------------    
+
+
+
+
+
+
+
+
+#http(s)://127.0.0.1
+@client.command()
+async def testoauth(ctx):
+
+    APP_KEY = 'pJVmmaPiWztdTyETUb0vqVuy8'
+    APP_SECRET = 'ZGAnsnyF3pKW8679Rej6XrbBJkzQRCP3PjBdbmHJSCp4siU0m8'
+
+    twitter = Twython(APP_KEY, APP_SECRET)
+    
+
+    auth = twitter.get_authentication_tokens(force_login=True,callback_url="https://www.google.com/")
+    twitter = Twython(
+    APP_KEY, APP_SECRET,
+    auth['oauth_token'], auth['oauth_token_secret'])   
+    
+    
+    webbrowser.open(auth['auth_url'])
+
+    #url = auth['auth_url']
+  #a=twitter.get_account_settings()
+    #response = requests.get(url)
+    
+
+
+    oauth_verifier_url = auth['auth_url']
+
+    oauth_verifier = requests.get("https://www.google.com/?"+auth['oauth_token'],allow_redirects=True)
+   
+
+    final_step = twitter.get_authorized_tokens(oauth_verifier)
+
+    a=1
+    
 #----------------------------------------------COMMON-----------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------    
 
@@ -172,7 +211,7 @@ async def send(ctx,*,message):
 MessageByUser = {}
 
 cl = Client()
-cl.login(os.getenv("instamail"), os.getenv("instamdp"))
+#cl.login(os.getenv("instamail"), os.getenv("instamdp"))
 InstagramInfo = {} 
 
 
