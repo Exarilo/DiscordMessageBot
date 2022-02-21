@@ -15,6 +15,7 @@ import numpy as np
 from instagrapi import Client
 from twython import Twython
 import webbrowser
+from django.http  import *
 
 #---------------------------------------------------------------------------------------------------------------------    
 #-----------------------------------------------VAR-------------------------------------------------------------------    
@@ -39,26 +40,18 @@ api = twitter.Api(consumer_key=os.getenv("twitterconsumer_key"),
 @client.command()
 async def testoauth(ctx):
 
-    APP_KEY = 'pJVmmaPiWztdTyETUb0vqVuy8'
-    APP_SECRET = 'ZGAnsnyF3pKW8679Rej6XrbBJkzQRCP3PjBdbmHJSCp4siU0m8'
+    APP_KEY = '5lutEW9WxnnNHKBMZbXGZPe3D'
+    APP_SECRET = 'mtGlq2LZxqGwo0grdlpSINekiH189iP8clS3fLXOYzOekK0Prn'
 
     twitter = Twython(APP_KEY, APP_SECRET)
     
 
     auth = twitter.get_authentication_tokens(force_login=True,callback_url="https://www.google.com/")
-    twitter = Twython(
-    APP_KEY, APP_SECRET,
-    auth['oauth_token'], auth['oauth_token_secret'])   
+    twitter = Twython(APP_KEY, APP_SECRET,auth['oauth_token'], auth['oauth_token_secret'])   
     
     
     webbrowser.open(auth['auth_url'])
-
-    #url = auth['auth_url']
-  #a=twitter.get_account_settings()
-    #response = requests.get(url)
-    
-
-
+    #oauth_verifier = request.GET['oauth_verifier']
     oauth_verifier_url = auth['auth_url']
 
     oauth_verifier = requests.get("https://www.google.com/?"+auth['oauth_token'],allow_redirects=True)
