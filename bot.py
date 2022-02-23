@@ -79,7 +79,7 @@ async def testoauth(ctx):
     
 
 
-    auth = tweepy.OAuthHandler(APP_KEY, APP_SECRET,callback="https://127.0.0.1")
+    auth = tweepy.OAuthHandler(APP_KEY, APP_SECRET,callback="http://localhost:8000/")
     url=auth.get_authorization_url()  
     await InitServ()
     webbrowser.open("http://localhost:8000/")
