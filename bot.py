@@ -1,4 +1,44 @@
-from email import message
+
+#app = Flask('app')
+#@app.route('/')
+
+#def run():
+#    return '<h1>Hello, Server!</h1>'
+
+#app.run(host = '0.0.0.0', port = 8080)
+
+from multiprocessing.connection import wait
+import socket
+from urllib.parse import urlparse
+from urllib.parse import parse_qs
+import http.server
+import socketserver
+
+
+async def InitServ():
+    handler_object = MyHttpRequestHandler
+    PORT = 8000
+    my_server = socketserver.TCPServer(("", PORT), handler_object)
+    my_server.serve_forever()
+
+class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
+    async def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        name = 'World'
+        query_components = parse_qs(urlparse(self.path).query)
+        if 'name' in query_components:
+            name = query_components["name"][0]
+        html = f"<html><head></head><body><h1>Hello {name}!</h1></body></html>"
+        self.wfile.write(bytes(html, "utf8"))
+
+        return
+
+
+
+
+
 from pickle import TRUE
 import discord
 from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
@@ -31,46 +71,23 @@ api = twitter.Api(consumer_key=os.getenv("twitterconsumer_key"),
                   access_token_secret=os.getenv("twitteraccess_token_secret"))
 
 
-
-
-
-
-
-
-
 #http(s)://127.0.0.1
 @client.command()
 async def testoauth(ctx):
-
-
-    link = "http://www.somesite.com/details.pl?urn=2344"
-    f = request.urlopen (link)
-    myfile = f.read()
-    print(myfile)
-
-
-    url = 'http://www.google.com/'
-    response = request.urlopen(url)
-    new_url = response.geturl()
-    #APP_KEY = '5lutEW9WxnnNHKBMZbXGZPe3D'
-   # APP_SECRET = 'mtGlq2LZxqGwo0grdlpSINekiH189iP8clS3fLXOYzOekK0Prn'
     APP_KEY = os.getenv("APP_KEY")
     APP_SECRET = os.getenv("APP_SECRET")
     
 
 
-    auth = tweepy.OAuthHandler(APP_KEY, APP_SECRET,callback="https://www.google.com/")
+    auth = tweepy.OAuthHandler(APP_KEY, APP_SECRET,callback="https://127.0.0.1")
     url=auth.get_authorization_url()  
-    http = urllib3.PoolManager()
-    r = http.request('GET', url=url)
-    http.urlopen()
-
-    webbrowser.open(url)
-
+    await InitServ()
+    webbrowser.open("http://localhost:8000/")
+    
 
     token = auth.get_access_token(verifier = "THAT_PIN_NUMBER")
 
-
+    '''
     twitter = Twython(APP_KEY, APP_SECRET, oauth_version=1)
     
 
@@ -88,7 +105,7 @@ async def testoauth(ctx):
     final_step = twitter.get_authorized_tokens(oauth_verifier)
 
     a=1
-    
+    '''
 #----------------------------------------------COMMON-----------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------    
 
