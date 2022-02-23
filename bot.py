@@ -7,6 +7,7 @@
 
 #app.run(host = '0.0.0.0', port = 8080)
 
+import asyncio
 from multiprocessing.connection import wait
 import socket
 from urllib.parse import urlparse
@@ -15,28 +16,26 @@ import http.server
 import socketserver
 
 
-async def InitServ():
+
+
+def InitServ():
     handler_object = MyHttpRequestHandler
     PORT = 8000
     my_server = socketserver.TCPServer(("", PORT), handler_object)
-    my_server.serve_forever()
+    my_server.handle_request()
 
 class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
-    async def do_GET(self):
+    def do_GET(self,name):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
-        name = 'World'
         query_components = parse_qs(urlparse(self.path).query)
-        if 'name' in query_components:
-            name = query_components["name"][0]
         html = f"<html><head></head><body><h1>Hello {name}!</h1></body></html>"
         self.wfile.write(bytes(html, "utf8"))
-
-        return
-
+        return query_components['oauth_verifier'][0]
 
 
+#InitServ()
 
 
 from pickle import TRUE
@@ -81,12 +80,11 @@ async def testoauth(ctx):
 
     auth = tweepy.OAuthHandler(APP_KEY, APP_SECRET,callback="http://localhost:8000/")
     url=auth.get_authorization_url()  
-    await InitServ()
-    webbrowser.open("http://localhost:8000/")
-    
-
-    token = auth.get_access_token(verifier = "THAT_PIN_NUMBER")
-
+ #   await InitServ()
+    webbrowser.open(url)
+    verifier=InitServ()
+    token = auth.get_access_token(verifier = verifier)
+    a=1
     '''
     twitter = Twython(APP_KEY, APP_SECRET, oauth_version=1)
     
