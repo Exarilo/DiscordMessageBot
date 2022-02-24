@@ -14,30 +14,6 @@ from urllib.parse import urlparse
 from urllib.parse import parse_qs
 import http.server
 import socketserver
-
-
-
-
-def InitServ():
-    handler_object = MyHttpRequestHandler
-    PORT = 8000
-    my_server = socketserver.TCPServer(("", PORT), handler_object)
-    my_server.handle_request()
-
-class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def do_GET(self,name):
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-        query_components = parse_qs(urlparse(self.path).query)
-        html = f"<html><head></head><body><h1>Hello {name}!</h1></body></html>"
-        self.wfile.write(bytes(html, "utf8"))
-        return query_components['oauth_verifier'][0]
-
-
-#InitServ()
-
-
 from pickle import TRUE
 import discord
 from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
@@ -59,8 +35,31 @@ from urllib import request
 import urllib3
 
 #---------------------------------------------------------------------------------------------------------------------    
+#-----------------------------------------------LOCALHOST-------------------------------------------------------------    
+#--------------------------------------------------------------------------------------------------------------------- 
+class oAuth:
+    OauthVerifier=""
+def InitServ():
+    handler_object = MyHttpRequestHandler
+    PORT = 8000
+    my_server = socketserver.TCPServer(("", PORT), handler_object)
+    my_server.handle_request()
+
+class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        query_components = parse_qs(urlparse(self.path).query)
+        html = f"<html><head></head><body><h1>Hello !</h1></body></html>"
+        self.wfile.write(bytes(html, "utf8"))
+        oAuth.OauthVerifier=query_components['oauth_verifier'][0]
+        return 
+
+#---------------------------------------------------------------------------------------------------------------------    
 #-----------------------------------------------VAR-------------------------------------------------------------------    
 #--------------------------------------------------------------------------------------------------------------------- 
+
 load_dotenv()
 client = commands.Bot("!")
 DiscordComponents(client)
@@ -77,33 +76,34 @@ async def testoauth(ctx):
     APP_SECRET = os.getenv("APP_SECRET")
     
 
-
+    '''
     auth = tweepy.OAuthHandler(APP_KEY, APP_SECRET,callback="http://localhost:8000/")
     url=auth.get_authorization_url()  
  #   await InitServ()
     webbrowser.open(url)
-    verifier=InitServ()
-    token = auth.get_access_token(verifier = verifier)
+    InitServ()
+    token = auth.get_access_token(verifier = oAuth.OauthVerifier)
     a=1
     '''
     twitter = Twython(APP_KEY, APP_SECRET, oauth_version=1)
     
 
-    auth = twitter.get_authentication_tokens(force_login=True,callback_url="https://www.google.com/")
+    auth = twitter.get_authentication_tokens(force_login=True,callback_url="http://localhost:8000/")
     twitter = Twython(APP_KEY, APP_SECRET,auth['oauth_token'], auth['oauth_token_secret'])   
     
     
     webbrowser.open(auth['auth_url'])
+    InitServ()
     #oauth_verifier = request.GET['oauth_verifier']
-    oauth_verifier_url = auth['auth_url']
+    #oauth_verifier_url = auth['auth_url']
 
     oauth_verifier = requests.get("https://www.google.com/?"+auth['oauth_token'],allow_redirects=True)
    
 
-    final_step = twitter.get_authorized_tokens(oauth_verifier)
+    final_step = twitter.get_authorized_tokens(oAuth.OauthVerifier)
 
     a=1
-    '''
+    
 #----------------------------------------------COMMON-----------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------    
 
