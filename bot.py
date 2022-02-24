@@ -1,15 +1,3 @@
-
-#app = Flask('app')
-#@app.route('/')
-
-#def run():
-#    return '<h1>Hello, Server!</h1>'
-
-#app.run(host = '0.0.0.0', port = 8080)
-
-import asyncio
-from multiprocessing.connection import wait
-import socket
 from urllib.parse import urlparse
 from urllib.parse import parse_qs
 import http.server
@@ -32,7 +20,6 @@ from twython import Twython
 import webbrowser
 import tweepy
 from urllib import request
-import urllib3
 
 #---------------------------------------------------------------------------------------------------------------------    
 #-----------------------------------------------LOCALHOST-------------------------------------------------------------    
@@ -440,6 +427,14 @@ media = cl.photo_upload(
     }
 )
 
+
+#app = Flask('app')
+#@app.route('/')
+
+#def run():
+#    return '<h1>Hello, Server!</h1>'
+
+#app.run(host = '0.0.0.0', port = 8080)
 
 '''
 
