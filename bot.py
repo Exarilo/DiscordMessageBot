@@ -24,8 +24,11 @@ from urllib import request
 #---------------------------------------------------------------------------------------------------------------------    
 #-----------------------------------------------LOCALHOST-------------------------------------------------------------    
 #--------------------------------------------------------------------------------------------------------------------- 
-class oAuth:
-    OauthVerifier=""
+class Twitter:
+    api = ""
+    userName=""
+    userID=""
+'''
 def InitServ():
     handler_object = MyHttpRequestHandler
     PORT = 8000
@@ -42,68 +45,68 @@ class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(bytes(html, "utf8"))
         oAuth.OauthVerifier=query_components['oauth_verifier'][0]
         return 
-
+'''
 #---------------------------------------------------------------------------------------------------------------------    
 #-----------------------------------------------VAR-------------------------------------------------------------------    
 #--------------------------------------------------------------------------------------------------------------------- 
 
 load_dotenv()
 client = commands.Bot("!")
+
 DiscordComponents(client)
-api = twitter.Api(consumer_key=os.getenv("twitterconsumer_key"),
-                  consumer_secret=os.getenv("twitterconsumer_secret"),
-                  access_token_key=os.getenv("twitteraccess_token_key"),
-                  access_token_secret=os.getenv("twitteraccess_token_secret"))
+
 
 
 #http(s)://127.0.0.1
-@client.command()
-async def testoauth(ctx):
+
+
+
+def isDigit(m):
+    return m.content.isdigit()
+
+async def SignInTwitter(ctx):
     APP_KEY = os.getenv("APP_KEY")
     APP_SECRET = os.getenv("APP_SECRET")
     
-
-    '''
-    auth = tweepy.OAuthHandler(APP_KEY, APP_SECRET,callback="http://localhost:8000/")
-    url=auth.get_authorization_url()  
- #   await InitServ()
-    webbrowser.open(url)
-    InitServ()
-    token = auth.get_access_token(verifier = oAuth.OauthVerifier)
-    a=1
-    '''
     twitter = Twython(APP_KEY, APP_SECRET, oauth_version=1)
-    
-
-    auth = twitter.get_authentication_tokens(force_login=True,callback_url="http://localhost:8000/")
+    auth = twitter.get_authentication_tokens(force_login=True,callback_url="oob")
     twitter = Twython(APP_KEY, APP_SECRET,auth['oauth_token'], auth['oauth_token_secret'])   
     
+    embed=discord.Embed(title="CLICK HERE TO LOGIN", url=auth['auth_url'],description="When you are done please enter the code in chat")
+    await ctx.send(embed=embed)
+    msg = await client.wait_for('message', check=None, timeout=None)
+    pin=msg.content
+    url="https://api.twitter.com/oauth/access_token?oauth_verifier="+str(pin)+"&oauth_token="+str(auth['oauth_token'])
+    response = requests.get(url)
     
-    webbrowser.open(auth['auth_url'])
-    InitServ()
-    #oauth_verifier = request.GET['oauth_verifier']
-    #oauth_verifier_url = auth['auth_url']
+    Twitter.api=Twython(app_key=APP_KEY,
+                    app_secret=APP_SECRET,
+                    oauth_token=response.text.split("&")[0].split("=")[1],
+                    oauth_token_secret=response.text.split("&")[1].split("=")[1])
 
-    oauth_verifier = requests.get("https://www.google.com/?"+auth['oauth_token'],allow_redirects=True)
-   
 
-    final_step = twitter.get_authorized_tokens(oAuth.OauthVerifier)
 
-    a=1
+    Twitter.userName=response.text.split("&")[3].split("=")[1]
+    Twitter.userID=response.text.split("&")[2].split("=")[1]
+
     
 #----------------------------------------------COMMON-----------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------    
 
-async def createButton(ctx,channels):
+async def createButton(ctx,channels,isSignIn):
+    
     channelToCreate=channels
     existing_channel = discord.utils.get(ctx.guild.channels).guild.channels
     for j in range (len(channelToCreate)):
         for k in range (len(existing_channel)):
             if(channelToCreate[j] in existing_channel[k].name):
-                if(channelToCreate[j] =="✅instagram"):
-                    await ctx.guild.channels[k].send("What do you want to do?",components = [[Button(label="Feed", style="1", custom_id="btFeed"),Button(label="Update channel", style="3", custom_id="btUpdate"), Button(label="Delete Messages", style="4", custom_id="btDelete")]])
+                if(isSignIn==True):
+                    await ctx.guild.channels[k].send("Please sign in before using this channel",components = [[Button(label="Sign in", style="1", custom_id="btSignIn"),Button(label="Delete channel", style="4", custom_id="btDeleteChan")]])
                 else:
-                    await ctx.guild.channels[k].send("What do you want to do?",components = [[Button(label="Update channel", style="3", custom_id="btUpdate"), Button(label="Delete Messages", style="4", custom_id="btDelete")]])
+                    if(channelToCreate[j] =="✅instagram"):
+                        await ctx.guild.channels[k].send("What do you want to do?",components = [[Button(label="Feed", style="1", custom_id="btFeed"),Button(label="Update channel", style="3", custom_id="btUpdate"), Button(label="Delete Messages", style="4", custom_id="btDelete")]])
+                    else:
+                        await ctx.guild.channels[k].send("What do you want to do?",components = [[Button(label="Update channel", style="3", custom_id="btUpdate"), Button(label="Delete Messages", style="4", custom_id="btDelete")]])
     while True:
         interaction = await client.wait_for("button_click")
 
@@ -115,7 +118,7 @@ async def begin(ctx):
     for i in range(len(channelToCreate)):
         await ctx.guild.create_text_channel(channelToCreate[i],position=i)
     existing_channel = discord.utils.get(ctx.guild.channels).guild.channels
-    await createButton(ctx,channelToCreate)
+    await createButton(ctx,channelToCreate,True)
 
 @client.command()
 async def stop(ctx):
@@ -131,20 +134,24 @@ async def stop(ctx):
 
 @client.event
 async def on_button_click(interaction):
+    if interaction.component.label =="Sign in":
+        await interaction.channel.purge()  
+        await SignInTwitter(ctx=interaction.channel)
+        await createButton(interaction.channel,channels = [interaction.channel.name],isSignIn=False)
     if interaction.component.label =="Feed":
-        await interaction.channel.last_message.delete()
+        await interaction.channel.purge()  
         await feed(ctx=interaction.channel)
-        await createButton(interaction.channel,channels = [interaction.channel.name])
-    if interaction.component.label =="Update channel":
+        await createButton(interaction.channel,channels = [interaction.channel.name],isSignIn=False)
+    elif interaction.component.label =="Update channel":
         await interaction.channel.purge()  
         if interaction.channel.name =="✅twitter":
             await updateTwitter(ctx=interaction.channel)
         elif interaction.channel.name =="✅instagram":
             await updateInstagram(ctx=interaction.channel)    
-        await createButton(interaction.channel,channels = [interaction.channel.name])
-    if interaction.component.label =="Delete Messages":
+        await createButton(interaction.channel,channels = [interaction.channel.name],isSignIn=False)
+    elif interaction.component.label =="Delete Messages":
         await interaction.channel.purge()  
-        await createButton(interaction.channel,channels = [interaction.channel.name])  
+        await createButton(interaction.channel,channels = [interaction.channel.name],isSignIn=False)  
 
 @client.command()
 async def pdf(ctx):
@@ -176,7 +183,7 @@ tweetByIDs = {}  #Key =Discord chat ID #Value = tweetID
 
 
 async def updateTwitter(ctx):
-    Mentions = api.GetMentions(return_json=True) 
+    Mentions = Twitter.api.get_mentions_timeline()
     isOriginalFound=False
     ReplytweetID=0
     for i in range(len(Mentions)) :
@@ -190,7 +197,7 @@ async def updateTwitter(ctx):
         ReplyProfilImage=Mentions[i]["user"]["profile_image_url"]
 
         if(isOriginalFound==False):
-            OriginalTweet = json.loads(str(api.GetStatus(status_id=ReplytweetID))) 
+            OriginalTweet = Twitter.api.show_status(id=ReplytweetID)
             OriginalText=OriginalTweet["text"]
             OriginalName=OriginalTweet["user"]["name"]
             OriginalProfilImage=OriginalTweet["user"]["profile_image_url"]
@@ -217,11 +224,12 @@ async def on_reaction_add(reaction, user):
 
 @client.command()
 async def send(ctx,*,message):
-    if(ctx.message.mentions[0].name=="MessagesBot"):
-        api.PostUpdate(in_reply_to_status_id=int(tweetByIDs.get(ctx.message.reference.message_id)[0]), status="@"+tweetByIDs.get(ctx.message.reference.message_id)[1]+" "+message)
-        
+    if(len(ctx.message.mentions)>0):
+        if(ctx.message.mentions[0].name=="MessagesBot"):
+            Twitter.api.update_status(in_reply_to_status_id=int(tweetByIDs.get(ctx.message.reference.message_id)[0]), status="@"+tweetByIDs.get(ctx.message.reference.message_id)[1]+" "+message)
+            
     else:
-        api.PostUpdate(status=message,auto_populate_reply_metadata=True)
+        Twitter.api.update_status(status=message,auto_populate_reply_metadata=True)
 
     #PARAM = {"text": mytext, "reply": {"in_reply_to_tweet_id": id}}
 
