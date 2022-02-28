@@ -1,12 +1,8 @@
-from urllib.parse import urlparse
-from urllib.parse import parse_qs
-import http.server
-import socketserver
 from pickle import TRUE
+from urllib import response
 import discord
 from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
 import discord.ext.commands as commands
-import twitter
 import json
 from io import BytesIO
 from fpdf import FPDF
@@ -17,9 +13,7 @@ import os
 import numpy as np
 from instagrapi import Client
 from twython import Twython
-import webbrowser
-import tweepy
-from urllib import request
+
 
 #---------------------------------------------------------------------------------------------------------------------    
 #-----------------------------------------------LOCALHOST-------------------------------------------------------------    
@@ -28,24 +22,7 @@ class Twitter:
     api = ""
     userName=""
     userID=""
-'''
-def InitServ():
-    handler_object = MyHttpRequestHandler
-    PORT = 8000
-    my_server = socketserver.TCPServer(("", PORT), handler_object)
-    my_server.handle_request()
 
-class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-        query_components = parse_qs(urlparse(self.path).query)
-        html = f"<html><head></head><body><h1>Hello !</h1></body></html>"
-        self.wfile.write(bytes(html, "utf8"))
-        oAuth.OauthVerifier=query_components['oauth_verifier'][0]
-        return 
-'''
 #---------------------------------------------------------------------------------------------------------------------    
 #-----------------------------------------------VAR-------------------------------------------------------------------    
 #--------------------------------------------------------------------------------------------------------------------- 
@@ -56,13 +33,6 @@ client = commands.Bot("!")
 DiscordComponents(client)
 
 
-
-#http(s)://127.0.0.1
-
-
-
-def isDigit(m):
-    return m.content.isdigit()
 
 async def SignInTwitter(ctx):
     APP_KEY = os.getenv("APP_KEY")
@@ -235,9 +205,75 @@ async def send(ctx,*,message):
 
     await ctx.channel.send("Message sended !")
 
-
 #---------------------------------------------------------------------------------------------------------------------    
 #----------------------------------------------INSTAGRAM--------------------------------------------------------------    
+#---------------------------------------------------------------------------------------------------------------------  
+class Instagram:
+    accessToken = ""
+    userID=""
+
+@client.command()
+async def connect(ctx):
+    embed=discord.Embed(title="CLICK HERE TO LOGIN", url="https://www.instagram.com/oauth/authorize?client_id=448189873753541&redirect_uri=https://zouple.maderyromain.repl.co/&response_type=code&scope=user_profile,user_media",description="When you are done please enter the code in chat")
+    await ctx.send(embed=embed)
+    msg = await client.wait_for('message', check=None, timeout=None)
+    code=msg.content
+    
+    url = "https://api.instagram.com/oauth/access_token"
+    payload="client_id=448189873753541&redirect_uri=https%3A%2F%2Fzouple.maderyromain.repl.co/&client_secret=0149bba19845b9bcec89ac6de267d554&code="+code+"&grant_type=authorization_code"
+    headers = {
+    'Content-Type': 'application/x-www-form-urlencoded'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload)
+    Instagram.accessToken=json.loads(response.text)["access_token"]
+    Instagram.userID=json.loads(response.text)["user_id"]
+
+@client.command()
+async def getmedia(ctx):
+    url = "https://graph.instagram.com/me/media?fields=id,caption,media_url,media_type&access_token="+Instagram.accessToken
+
+    response = requests.request("GET", url)
+    medias=json.loads(response.text)["data"]
+    listPhoto=[]
+    listPhotoHorizontal=[]
+        
+    for i in range (len(medias)):
+        if(medias[i]["media_type"]=="IMAGE"):
+            listPhoto.append(medias[i]["media_url"])
+    imageToSend=""
+    cpt=0
+    for j in range (len(listPhoto)-1):
+        if(imageToSend==""):
+            imagToConcat1 = Image.open(BytesIO(requests.get(listPhoto[j]).content))
+            imagToConcat2 = Image.open(BytesIO(requests.get(listPhoto[j+1]).content))
+            imageToSend=get_concat_h(imagToConcat1, imagToConcat2)
+            cpt+=1
+        else:
+            imageToSend=get_concat_h(imageToSend, Image.open(BytesIO(requests.get(listPhoto[j+1]).content)))
+            cpt+=1
+            if(cpt==3):
+                listPhotoHorizontal.append(imageToSend)
+                imageToSend=""
+                cpt=0
+                j+=1
+
+    for i in range (len(listPhotoHorizontal)):
+        if(i==0):
+            imageToSend=listPhotoHorizontal[i]
+        else:
+            imageToSend=get_concat_v(imageToSend, listPhotoHorizontal[i])
+                    
+        
+
+    with BytesIO() as image_binary:
+                    imageToSend.save(image_binary, 'PNG')
+                    image_binary.seek(0)
+                    await ctx.send(file=discord.File(fp=image_binary, filename='image.png'))
+
+
+#---------------------------------------------------------------------------------------------------------------------    
+#----------------------------------------------INSTAGRAM2-------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------        
 MessageByUser = {}
 
@@ -420,7 +456,24 @@ def getMedias(username: str, amount: int = 5) -> dict:
 
 '''
 
+'''
+def InitServ():
+    handler_object = MyHttpRequestHandler
+    PORT = 8000
+    my_server = socketserver.TCPServer(("", PORT), handler_object)
+    my_server.handle_request()
 
+class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        query_components = parse_qs(urlparse(self.path).query)
+        html = f"<html><head></head><body><h1>Hello !</h1></body></html>"
+        self.wfile.write(bytes(html, "utf8"))
+        oAuth.OauthVerifier=query_components['oauth_verifier'][0]
+        return 
+'''
 
 '''
 user_id = cl.user_id_from_username("romain_madery")
