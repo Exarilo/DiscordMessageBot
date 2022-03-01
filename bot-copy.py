@@ -13,6 +13,7 @@ import os
 import numpy as np
 from instagrapi import Client
 from twython import Twython
+from signIn import *
 
 
 #---------------------------------------------------------------------------------------------------------------------    
@@ -106,7 +107,10 @@ async def stop(ctx):
 async def on_button_click(interaction):
     if interaction.component.label =="Sign in":
         await interaction.channel.purge()  
-        await SignInTwitter(ctx=interaction.channel)
+        if(interaction.channel.name=="✅twitter"):
+            await SignInTwitter(ctx=interaction.channel)
+        elif(interaction.channel.name=="✅instagram"):
+            await SignInInstagram(ctx=interaction.channel)
         await createButton(interaction.channel,channels = [interaction.channel.name],isSignIn=False)
     if interaction.component.label =="Feed":
         await interaction.channel.purge()  
@@ -212,8 +216,8 @@ class Instagram:
     accessToken = ""
     userID=""
 
-@client.command()
-async def connect(ctx):
+
+async def SignInInstagram(ctx):
     embed=discord.Embed(title="CLICK HERE TO LOGIN", url="https://www.instagram.com/oauth/authorize?client_id=448189873753541&redirect_uri=https://zouple.maderyromain.repl.co/&response_type=code&scope=user_profile,user_media",description="When you are done please enter the code in chat")
     await ctx.send(embed=embed)
     msg = await client.wait_for('message', check=None, timeout=None)
