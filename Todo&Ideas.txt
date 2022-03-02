@@ -2,7 +2,7 @@
 1) Add a databse to store tokens
 2) Encrypt tokens
 3) The user must be able to set the time the message is sent
-
+4) Verify if channels exists before create
 #----------------------------------------------TWITTER---------------------------------------------------------------- #
 1) Send messages when reply on discord //Maybe user reaction to answer
 2) Set the callback url to the website
