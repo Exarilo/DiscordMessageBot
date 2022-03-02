@@ -1,12 +1,12 @@
 #---------------------------------------------------------------------------------------------------------------------    
-#----------------------------------------------TWITTER-----------------------------------------------------------------    
+#----------------------------------------------TWITTER----------------------------------------------------------------    
 #---------------------------------------------------------------------------------------------------------------------   
 import os
 from twython import Twython
 import discord
 import discord.ext.commands as commands
 import requests
-
+from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
 
 
 tweetByIDs = {}  #Key =Discord chat ID #Value = tweetID
@@ -15,6 +15,9 @@ class Twitter:
     api = ""
     userName=""
     userID=""
+    ButtonsSignIn = [Button(label="Sign in", style="1", custom_id="btSignIn"),Button(label="Delete channel", style="4", custom_id="btDeleteChan")]
+    ButtonsUpdates=[Button(label="Update channel", style="3", custom_id="btUpdate"),Button(label="Delete Messages", style="4", custom_id="btDelete")]
+
 
 async def SignInTwitter(ctx,client):
     APP_KEY = os.getenv("APP_KEY")
@@ -27,6 +30,7 @@ async def SignInTwitter(ctx,client):
     embed=discord.Embed(title="CLICK HERE TO LOGIN", url=auth['auth_url'],description="When you are done please enter the code in chat")
     await ctx.send(embed=embed)
     msg = await client.wait_for('message', check=None, timeout=None)
+    await ctx.purge()
     pin=msg.content
     url="https://api.twitter.com/oauth/access_token?oauth_verifier="+str(pin)+"&oauth_token="+str(auth['oauth_token'])
     response = requests.get(url)
