@@ -1,0 +1,16 @@
+#----------------------------------------------COMMON----------------------------------------------------------------- #
+1) Add a databse to store tokens
+2) Encrypt tokens
+3) The user must be able to set the time the message is sent
+
+#----------------------------------------------TWITTER---------------------------------------------------------------- #
+1) Send messages when reply on discord //Maybe user reaction to answer
+2) Set the callback url to the website
+3) Improve Embed to send non-pixelated images
+
+#----------------------------------------------INSTAGRAM---------------------------------------------------------------#
+1) Refresh/Long life token
+
+#----------------------------------------------IDEAS-------------------------------------------------------------------#
+1) Add roles to hide messages for other users
+2) Send messages on multiple social network
