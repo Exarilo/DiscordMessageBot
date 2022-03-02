@@ -9,28 +9,30 @@ from fpdf import FPDF
 from dotenv import load_dotenv
 from Twitter import *
 from Instagram import *
+from Tools import *
 
 
 
+listChannels=["twitter","instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
 load_dotenv()
 client = commands.Bot("!")
-
 DiscordComponents(client)
+
 
 @client.command()
 async def begin(ctx):
     #await ctx.guild.create_category_channel("Reseaux Sociaux")
-    channelToCreate=["✅twitter","✅instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
+    channelToCreate=listChannels
     
     for i in range(len(channelToCreate)):
         await ctx.guild.create_text_channel(channelToCreate[i],position=i)
     existing_channel = discord.utils.get(ctx.guild.channels).guild.channels
-    await createButton(ctx,channelToCreate,True)
+    buttons = [Button(label="Sign in", style="1", custom_id="btSignIn"),Button(label="Delete channel", style="4", custom_id="btDeleteChan")]
+    await createButton(ctx,channelToCreate,"Please sign in before using this channel",buttons,client)
 
 @client.command()
 async def stop(ctx):
-    channelToDelete=["✅twitter","✅instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
-
+    channelToDelete=listChannels
     existing_channel = discord.utils.get(ctx.guild.channels).guild.channels
     for i in range (len(channelToDelete)):
         for j in range (len(existing_channel)):
@@ -38,77 +40,28 @@ async def stop(ctx):
                 await discord.utils.get(ctx.guild.channels, name=channelToDelete[i]).delete()
                 break
 
-
-
-async def createButton(ctx,channels,isSignIn):
-    
-    channelToCreate=channels
-    existing_channel = discord.utils.get(ctx.guild.channels).guild.channels
-    for j in range (len(channelToCreate)):
-        for k in range (len(existing_channel)):
-            if(channelToCreate[j] in existing_channel[k].name):
-                if(isSignIn==True): 
-                    await ctx.guild.channels[k].send("Please sign in before using this channel",components = [[Button(label="Sign in", style="1", custom_id="btSignIn"),Button(label="Delete channel", style="4", custom_id="btDeleteChan")]])
-                else:
-                    if(channelToCreate[j] =="✅instagram"):
-                        await ctx.guild.channels[k].send("What do you want to do?",components = [[Button(label="Feed", style="1", custom_id="btFeed"),Button(label="Update channel", style="3", custom_id="btUpdate"), Button(label="Delete Messages", style="4", custom_id="btDelete")]])
-                    else:
-                        await ctx.guild.channels[k].send("What do you want to do?",components = [[Button(label="Update channel", style="3", custom_id="btUpdate"), Button(label="Delete Messages", style="4", custom_id="btDelete")]])
-    while True:
-        interaction = await client.wait_for("button_click")
-
-
-
-
 @client.event
 async def on_button_click(interaction):
-    if interaction.component.label =="Sign in":
-        await interaction.channel.purge()  
-        if(interaction.channel.name=="✅twitter"):
+    currentChannel=interaction.channel.name
+    currentAction=interaction.component.label
+    await interaction.channel.purge()  
+
+    if(interaction.channel.name=="twitter"):
+        if(currentAction=="Sign in"):
             await SignInTwitter(ctx=interaction.channel,client=client)
-        elif(interaction.channel.name=="✅instagram"):
-            await SignInInstagram(ctx=interaction.channel,client=client)
-        await createButton(interaction.channel,channels = [interaction.channel.name],isSignIn=False)
-    if interaction.component.label =="Feed":
-        await interaction.channel.purge()  
-        #await feed(ctx=interaction.channel)
-        await createButton(interaction.channel,channels = [interaction.channel.name],isSignIn=False)
-    elif interaction.component.label =="Update channel":
-        await interaction.channel.purge()  
-        if interaction.channel.name =="✅twitter":
+        elif(currentAction=="Update channel"):
             await updateTwitter(ctx=interaction.channel)
-        elif interaction.channel.name =="✅instagram":
-            #await updateInstagram(ctx=interaction.channel)    
-            a=1
-        #await createButton(interaction.channel,channels = [interaction.channel.name],isSignIn=False)
-    elif interaction.component.label =="Delete Messages":
-        await interaction.channel.purge()  
-        await createButton(interaction.channel,channels = [interaction.channel.name],isSignIn=False)  
-
-
-@client.command()
-async def pdf(ctx):
-    messages = await ctx.channel.history(limit=200).flatten()
-    text=""
-    for i in messages :
-        if (len(i.embeds)!=0):
-            message=i.embeds[0].description
-            name=i.embeds[0].title
-            #img = Image.open(BytesIO(requests.get(str(i.embeds[0].thumbnail.url)).content))
-            text+= name+"\n"
-            text+= message+"\n"
-        else:
-            if(i.content !="!pdf" and i.content !="Update channel" and i.content != "What do you want to do?" and i.content !=""):
-                text+= i.content+"\n"
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font('Arial', 'B', 14)
-    pdf.multi_cell(0, 10, text,fill=TRUE)
-    bstring = pdf.output(dest='S').encode('latin-1')
-    await ctx.send(file=discord.File(BytesIO(bstring), filename='pdf.pdf'))
-
-
-
+        await createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Twitter.ButtonsUpdates,client)
+    
+    
+    elif(interaction.channel.name=="instagram"):
+        if(currentAction=="Sign in"):
+            await SignInInstagram(ctx=interaction.channel,client=client)
+        elif(currentAction=="Feed"):
+            await getFeedInstagram(ctx=interaction.channel)
+        elif(currentAction=="Update channel"):
+            todo="TODO"
+        await createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Instagram.ButtonsUpdates,client)
 
 
             
@@ -128,9 +81,6 @@ async def send(ctx,*,message):
             
     else:
         Twitter.api.update_status(status=message,auto_populate_reply_metadata=True)
-
-    #PARAM = {"text": mytext, "reply": {"in_reply_to_tweet_id": id}}
-
     await ctx.channel.send("Message sended !")
 
 
