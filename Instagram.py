@@ -8,8 +8,20 @@ from io import BytesIO
 import requests
 from PIL import Image
 from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
+from instagram.client import InstagramAPI
+from instagrapi import Client
 
+cl = Client()
 
+class Feed:
+    listPhoto=[]
+    listTxt=[]
+    currentIndex=0
+class User:
+    pk=[]
+    username = []
+    pic = []
+    feed=""
 class Instagram:
     accessToken = ""
     accessTokenExpireIn=""
@@ -18,6 +30,98 @@ class Instagram:
     ButtonsUpdates=[Button(label="Feed", style="1", custom_id="btFeed"),Button(label="Update channel", style="3", custom_id="btUpdate"),Button(label="Delete Messages", style="4", custom_id="btDelete")]
 
 
+async def SignInInstagram(ctx,client):
+    embed=discord.Embed(title="ENTER YOUR USERNAME : ",url="https://www.instagram.com",description="")
+    await ctx.send(embed=embed)
+    msg = await client.wait_for('message', check=None, timeout=None)
+    await ctx.purge()
+    username=msg.content
+    embed=discord.Embed(title="ENTER YOUR PASSWORD : ",url="https://www.instagram.com",description="")
+    await ctx.send(embed=embed)
+    msg = await client.wait_for('message', check=None, timeout=None)
+    await ctx.purge()
+    password=msg.content
+    cl.login(username, password)
+    userInfo=cl.user_info(cl.user_id)
+    User.pk=userInfo.pk
+    User.username=userInfo.username
+    User.pic=userInfo.profile_pic_url
+
+    embed=discord.Embed(title=User.username,description="succefuly connected !", url="https://www.instagram.com", color=0x1fa335)
+    embed.set_image(url=User.pic)
+    await ctx.send(embed=embed)
+
+
+def fillMediaClass():
+    #TypeImg
+    medias=cl.user_medias(User.pk,amount=10)
+    for i in range (len(medias)):
+        if(medias[i].media_type==1):
+            Feed.listPhoto.append(medias[i].thumbnail_url)
+            Feed.listTxt.append(medias[i].caption_text)
+
+async def getFeedInstagram2(ctx):
+    fillMediaClass()
+    embed=discord.Embed(title="FEED INSTAGRAM",url="https://www.instagram.com",color=0xbe6e2d)
+    embed.set_author(name=User.username,url=User.pic)
+    embed.set_image(url=Feed.listPhoto[0])
+    embed.add_field(name=User.username, value=Feed.listTxt[0], inline=False)
+    message = await ctx.send(embed=embed)
+    await message.add_reaction('◀️')
+    await message.add_reaction('▶️')
+
+
+async def getFeedInstagram(ctx):
+    User.feed=cl.user_medias(User.pk,amount=10)
+    medias=User.feed
+    listPhoto=[]
+    listPhotoHorizontal=[]
+ 
+    for i in range (len(medias)):
+        if(medias[i].media_type==1):
+            listPhoto.append(medias[i].thumbnail_url)
+    imageToSend=""
+    cpt=0
+    for j in range (len(listPhoto)-1):
+        if(imageToSend==""):
+            imagToConcat1 = Image.open(BytesIO(requests.get(listPhoto[j]).content))
+            imagToConcat2 = Image.open(BytesIO(requests.get(listPhoto[j+1]).content))
+            imageToSend=get_concat_h(imagToConcat1, imagToConcat2)
+            cpt+=1
+        else:
+            imageToSend=get_concat_h(imageToSend, Image.open(BytesIO(requests.get(listPhoto[j+1]).content)))
+            cpt+=1
+            if(cpt==3):
+                listPhotoHorizontal.append(imageToSend)
+                imageToSend=""
+                cpt=0
+                j+=1
+
+    for i in range (len(listPhotoHorizontal)):
+        if(i==0):
+            imageToSend=listPhotoHorizontal[i]
+        else:
+            imageToSend=get_concat_v(imageToSend, listPhotoHorizontal[i])
+                    
+        
+
+    with BytesIO() as image_binary:
+                    imageToSend.save(image_binary, 'PNG')
+                    image_binary.seek(0)
+                    await ctx.send(file=discord.File(fp=image_binary, filename='image.png'))
+
+def get_concat_h(im1, im2):
+    dst = Image.new('RGB', (im1.width + im2.width, im1.height))
+    dst.paste(im1, (0, 0))
+    dst.paste(im2, (im1.width, 0))
+    return dst
+
+def get_concat_v(im1, im2):
+    dst = Image.new('RGB', (im1.width, im1.height + im2.height))
+    dst.paste(im1, (0, 0))
+    dst.paste(im2, (0, im1.height))
+    return dst    
+'''
 async def SignInInstagram(ctx,client):
     embed=discord.Embed(title="CLICK HERE TO LOGIN", url="https://www.instagram.com/oauth/authorize?client_id=448189873753541&redirect_uri=https://zouple.maderyromain.repl.co/&response_type=code&scope=user_profile,user_media",description="When you are done please enter the code in chat")
     await ctx.send(embed=embed)
@@ -39,7 +143,7 @@ async def SignInInstagram(ctx,client):
     Instagram.accessToken=json.loads(response.text)["access_token"]
     Instagram.accessTokenExpireIn =json.loads(response.text)["expires_in"]
 
-
+    
 async def getFeedInstagram(ctx):
     url = "https://graph.instagram.com/me/media?fields=id,caption,media_url,media_type&access_token="+Instagram.accessToken
 
@@ -81,15 +185,6 @@ async def getFeedInstagram(ctx):
                     image_binary.seek(0)
                     await ctx.send(file=discord.File(fp=image_binary, filename='image.png'))
 
-def get_concat_h(im1, im2):
-    dst = Image.new('RGB', (im1.width + im2.width, im1.height))
-    dst.paste(im1, (0, 0))
-    dst.paste(im2, (im1.width, 0))
-    return dst
 
-def get_concat_v(im1, im2):
-    dst = Image.new('RGB', (im1.width, im1.height + im2.height))
-    dst.paste(im1, (0, 0))
-    dst.paste(im2, (0, im1.height))
-    return dst
 
+'''
