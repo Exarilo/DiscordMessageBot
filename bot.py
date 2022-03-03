@@ -56,9 +56,14 @@ async def on_button_click(interaction):
     
     elif(interaction.channel.name=="instagram"):
         if(currentAction=="Sign in"):
-            await SignInInstagram(ctx=interaction.channel,client=client)
+            try:
+                await SignInInstagram(ctx=interaction.channel,client=client)
+            except:
+                await createButton(interaction.channel,[interaction.channel.name],"Error, try again...",Instagram.ButtonsSignIn,client)
+                return
         elif(currentAction=="Feed"):
-            await getFeedInstagram(ctx=interaction.channel)
+            await getFeedInstagram2(ctx=interaction.channel)
+
         elif(currentAction=="Update channel"):
             todo="TODO"
         await createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Instagram.ButtonsUpdates,client)
@@ -71,7 +76,15 @@ async def on_reaction_add(reaction, user):
         if str(reaction.emoji) == "❌":
             await reaction.message.delete()
     
-
+    if str(reaction.emoji) == "◀️":
+        Feed.currentIndex-=1
+        if(Feed.currentIndex<0):
+            Feed.currentIndex=len(Feed.listPhoto)-1
+    if str(reaction.emoji) == "▶️":      
+        Feed.currentIndex+=1
+        if(Feed.currentIndex==len(Feed.listPhoto)):
+            Feed.currentIndex=0
+            await reaction.message.remove_reaction()
 
 @client.command()
 async def send(ctx,*,message):
