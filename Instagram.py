@@ -1,274 +1,195 @@
 #---------------------------------------------------------------------------------------------------------------------    
-#----------------------------------------------COMMON-----------------------------------------------------------------    
-#---------------------------------------------------------------------------------------------------------------------    
-from pickle import TRUE
+#----------------------------------------------INSTAGRAM--------------------------------------------------------------    
+#---------------------------------------------------------------------------------------------------------------------        
 import discord
-from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
 import discord.ext.commands as commands
-from fpdf import FPDF
-from dotenv import load_dotenv
-from Twitter import *
-from Instagram import *
-from Tools import *
+import json
+from io import BytesIO
+import requests
+from PIL import Image
+from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
+from instagrapi import Client
+#from instagram.client import InstagramAPI
+
+cl = Client()
+
+class Feed:
+    listPhoto=[]
+    listTxt=[]
+    currentIndex=0
+class User:
+    pk=[]
+    username = []
+    pic = []
+    feed=""
+class Instagram:
+    accessToken = ""
+    accessTokenExpireIn=""
+    userID=""
+    ButtonsSignIn = [Button(label="Sign in", style="1", custom_id="btSignIn"),Button(label="Delete channel", style="4", custom_id="btDeleteChan")]
+    ButtonsUpdates=[Button(label="Feed", style="1", custom_id="btFeed"),Button(label="Update channel", style="3", custom_id="btUpdate"),Button(label="Delete Messages", style="4", custom_id="btDelete")]
 
 
+async def SignInInstagram(ctx,client):
+    embed=discord.Embed(title="ENTER YOUR USERNAME : ",url="https://www.instagram.com",description="")
+    await ctx.send(embed=embed)
+    msg = await client.wait_for('message', check=None, timeout=None)
+    await ctx.purge()
+    username=msg.content
+    embed=discord.Embed(title="ENTER YOUR PASSWORD : ",url="https://www.instagram.com",description="")
+    await ctx.send(embed=embed)
+    msg = await client.wait_for('message', check=None, timeout=None)
+    await ctx.purge()
+    password=msg.content
+    cl.login(username, password)
+    userInfo=cl.user_info(cl.user_id)
+    User.pk=userInfo.pk
+    User.username=userInfo.username
+    User.pic=userInfo.profile_pic_url
 
-listChannels=["twitter","instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
-load_dotenv()
-client = commands.Bot("!")
-DiscordComponents(client)
+    embed=discord.Embed(title=User.username,description="succefuly connected !", url="https://www.instagram.com", color=0x1fa335)
+    embed.set_image(url=User.pic)
+    await ctx.send(embed=embed)
 
 
-@client.command()
-async def begin(ctx):
-    #await ctx.guild.create_category_channel("Reseaux Sociaux")
-    channelToCreate=listChannels
+def fillMediaClass():
+    #TypeImg
+    medias=cl.user_medias(User.pk,amount=10)
+    for i in range (len(medias)):
+        if(medias[i].media_type==1):
+            Feed.listPhoto.append(medias[i].thumbnail_url)
+            Feed.listTxt.append(medias[i].caption_text)
+
+
+def setFeedEmbed():
+    embed=discord.Embed(title="FEED INSTAGRAM",url="https://www.instagram.com",color=0xbe6e2d)
+    embed.set_author(name=User.username,url=User.pic)
+    embed.set_image(url=Feed.listPhoto[Feed.currentIndex])
+    embed.add_field(name=User.username, value=Feed.listTxt[Feed.currentIndex], inline=False)
+    return embed
+
+
+async def getFeedInstagram2(ctx):
+    fillMediaClass()
+    embed =setFeedEmbed()
+    message = await ctx.send(embed=embed)
+    await message.add_reaction('◀️')
+    await message.add_reaction('▶️')    
+
+async def getFeedInstagram(ctx):
+    User.feed=cl.user_medias(User.pk,amount=10)
+    medias=User.feed
+    listPhoto=[]
+    listPhotoHorizontal=[]
+ 
+    for i in range (len(medias)):
+        if(medias[i].media_type==1):
+            listPhoto.append(medias[i].thumbnail_url)
+    imageToSend=""
+    cpt=0
+    for j in range (len(listPhoto)-1):
+        if(imageToSend==""):
+            imagToConcat1 = Image.open(BytesIO(requests.get(listPhoto[j]).content))
+            imagToConcat2 = Image.open(BytesIO(requests.get(listPhoto[j+1]).content))
+            imageToSend=get_concat_h(imagToConcat1, imagToConcat2)
+            cpt+=1
+        else:
+            imageToSend=get_concat_h(imageToSend, Image.open(BytesIO(requests.get(listPhoto[j+1]).content)))
+            cpt+=1
+            if(cpt==3):
+                listPhotoHorizontal.append(imageToSend)
+                imageToSend=""
+                cpt=0
+                j+=1
+
+    for i in range (len(listPhotoHorizontal)):
+        if(i==0):
+            imageToSend=listPhotoHorizontal[i]
+        else:
+            imageToSend=get_concat_v(imageToSend, listPhotoHorizontal[i])
+                    
+        
+
+    with BytesIO() as image_binary:
+                    imageToSend.save(image_binary, 'PNG')
+                    image_binary.seek(0)
+                    await ctx.send(file=discord.File(fp=image_binary, filename='image.png'))
+
+def get_concat_h(im1, im2):
+    dst = Image.new('RGB', (im1.width + im2.width, im1.height))
+    dst.paste(im1, (0, 0))
+    dst.paste(im2, (im1.width, 0))
+    return dst
+
+def get_concat_v(im1, im2):
+    dst = Image.new('RGB', (im1.width, im1.height + im2.height))
+    dst.paste(im1, (0, 0))
+    dst.paste(im2, (0, im1.height))
+    return dst    
+'''
+async def SignInInstagram(ctx,client):
+    embed=discord.Embed(title="CLICK HERE TO LOGIN", url="https://www.instagram.com/oauth/authorize?client_id=448189873753541&redirect_uri=https://zouple.maderyromain.repl.co/&response_type=code&scope=user_profile,user_media",description="When you are done please enter the code in chat")
+    await ctx.send(embed=embed)
+    msg = await client.wait_for('message', check=None, timeout=None)
+    await ctx.purge()
+    code=msg.content
     
-    for i in range(len(channelToCreate)):
-        await ctx.guild.create_text_channel(channelToCreate[i],position=i)
-    existing_channel = discord.utils.get(ctx.guild.channels).guild.channels
-    buttons = [Button(label="Sign in", style="1", custom_id="btSignIn"),Button(label="Delete channel", style="4", custom_id="btDeleteChan")]
-    await createButton(ctx,channelToCreate,"Please sign in before using this channel",buttons,client)
-
-@client.command()
-async def stop(ctx):
-    channelToDelete=listChannels
-    existing_channel = discord.utils.get(ctx.guild.channels).guild.channels
-    for i in range (len(channelToDelete)):
-        for j in range (len(existing_channel)):
-            if(channelToDelete[i] in existing_channel[j].name):
-                await discord.utils.get(ctx.guild.channels, name=channelToDelete[i]).delete()
-                break
-
-@client.event
-async def on_button_click(interaction):
-    currentChannel=interaction.channel.name
-    currentAction=interaction.component.label
-    await interaction.channel.purge()  
-
-    if(interaction.channel.name=="twitter"):
-        if(currentAction=="Sign in"):
-            await SignInTwitter(ctx=interaction.channel,client=client)
-        elif(currentAction=="Update channel"):
-            await updateTwitter(ctx=interaction.channel)
-        await createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Twitter.ButtonsUpdates,client)
-    
-    
-    elif(interaction.channel.name=="instagram"):
-        if(currentAction=="Sign in"):
-            try:
-                await SignInInstagram(ctx=interaction.channel,client=client)
-            except:
-                await createButton(interaction.channel,[interaction.channel.name],"Error, try again...",Instagram.ButtonsSignIn,client)
-                return
-        elif(currentAction=="Feed"):
-            await getFeedInstagram2(ctx=interaction.channel)
-
-        elif(currentAction=="Update channel"):
-            todo="TODO"
-        await createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Instagram.ButtonsUpdates,client)
-
-
-            
-@client.event
-async def on_reaction_add(reaction, user):
-    if user != client.user:
-        if str(reaction.emoji) == "❌":
-            await reaction.message.delete()
-    
-    if str(reaction.emoji) == "◀️":
-        Feed.currentIndex-=1
-        if(Feed.currentIndex<0):
-            Feed.currentIndex=len(Feed.listPhoto)-1
-            setFeedEmbed()
-    if str(reaction.emoji) == "▶️":      
-        Feed.currentIndex+=1
-        if(Feed.currentIndex==len(Feed.listPhoto)):
-            Feed.currentIndex=0
-        setFeedEmbed()
-            #await reaction.message.remove_reaction()
-
-@client.command()
-async def send(ctx,*,message):
-    if(len(ctx.message.mentions)>0):
-        if(ctx.message.mentions[0].name=="MessagesBot"):
-            Twitter.api.update_status(in_reply_to_status_id=int(tweetByIDs.get(ctx.message.reference.message_id)[0]), status="@"+tweetByIDs.get(ctx.message.reference.message_id)[1]+" "+message)
-            
-    else:
-        Twitter.api.update_status(status=message,auto_populate_reply_metadata=True)
-    await ctx.channel.send("Message sended !")
-
-
-
-
-
-
-
-
-
-'''
-    api_url = "https://www.instagram.com/exarilosuperbot/channel/?__a=1"
-    response = requests.get(api_url)
-    response=response.json()
-    InstagramInfo["username"] =response['graphql']['user']['full_name']
-    InstagramInfo["id"] =response['graphql']['user']['id']
-    InstagramInfo["userPicture"] =response['graphql']['user']['profile_pic_url_hd']
-    InstagramInfo["userPageId"] =response['logging_page_id']
-    node1=response['graphql']['user']['edge_owner_to_timeline_media']['edges']
-    listImg=[]
-    listMessages=[]
-    for i in range(len(node1)) :
-        listImg.append(response['graphql']['user']['edge_owner_to_timeline_media']['edges'][i]['node']['display_url'])
-        node2=response['graphql']['user']['edge_owner_to_timeline_media']['edges'][0]['node']['edge_media_to_caption']['edges']
-        for j in range(len(node2)) :
-            listMessages.append(response['graphql']['user']['edge_owner_to_timeline_media']['edges'][i]['node']['edge_media_to_caption']['edges'][j]['node']['text'])
-    InstagramInfo["userPostsImg"] =listImg
-    InstagramInfo["userPostsMessages"] =listMessages
-    a=1
-    #await get_medias("romain_madery")
-    '''
-
-
-
-
-#exarilosuperbot=user_id = cl.user_id_from_username(username)
-#https://www.instagram.com/exarilosuperbot/?__a=1
-#jsonDeseralize
-'''
-def get_medias(hashtags,
-               ht_type='top',
-               amount=27,
-               ):
-    ht_medias = []
-    for hashtag in hashtags:
-        if ht_type == 'top':
-            ht_medias.extend(
-                cl.hashtag_medias_top(
-                    name=hashtag,
-                    amount=amount if amount <= 9 else 9
-                )
-            )
-        elif ht_type == 'recent':
-            ht_medias.extend(
-                cl.hashtag_medias_recent(
-                    name=hashtag,
-                    amount=amount
-                )
-            )
-    return list(dict([(media.pk, media) for media in ht_medias]).values())
-
-def getMedias(username: str, amount: int = 5) -> dict:
-    amount = int(amount)
-    user_id = cl.user_id_from_username(username)
-    medias = cl.user_medias(user_id)
-    result = {}
-    i = 0
-    for m in medias:
-        if i >= amount:
-            break
-        paths = []
-        if m.media_type == 1:
-            # Photo
-            paths.append(cl.photo_download(m.pk))
-        elif m.media_type == 2 and m.product_type == 'feed':
-            # Video
-            paths.append(cl.video_download(m.pk))
-        elif m.media_type == 2 and m.product_type == 'igtv':
-            # IGTV
-            paths.append(cl.video_download(m.pk))
-        elif m.media_type == 2 and m.product_type == 'clips':
-            # Reels
-            paths.append(cl.video_download(m.pk))
-        elif m.media_type == 8:
-            # Album
-            for path in cl.album_download(m.pk):
-                paths.append(path)
-        result[m.pk] = paths
-        print(f'http://instagram.com/p/{m.code}/', paths)
-        i += 1
-    return 
-
-
-'''
-
-'''
-def InitServ():
-    handler_object = MyHttpRequestHandler
-    PORT = 8000
-    my_server = socketserver.TCPServer(("", PORT), handler_object)
-    my_server.handle_request()
-
-class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-        query_components = parse_qs(urlparse(self.path).query)
-        html = f"<html><head></head><body><h1>Hello !</h1></body></html>"
-        self.wfile.write(bytes(html, "utf8"))
-        oAuth.OauthVerifier=query_components['oauth_verifier'][0]
-        return 
-'''
-
-'''
-user_id = cl.user_id_from_username("romain_madery")
-medias = cl.user_medias(user_id, 20)
-media = cl.photo_upload(
-    "img.jpg",
-    "Test caption for photo with #hashtags and mention users such @adw0rd",
-    extra_data={
-        "custom_accessibility_caption": "alt text example",
-        "like_and_view_counts_disabled": 1,
-        "disable_comments": 1,
+    url = "https://api.instagram.com/oauth/access_token"
+    payload="client_id=448189873753541&redirect_uri=https%3A%2F%2Fzouple.maderyromain.repl.co/&client_secret=0149bba19845b9bcec89ac6de267d554&code="+code+"&grant_type=authorization_code"
+    headers = {
+    'Content-Type': 'application/x-www-form-urlencoded'
     }
-)
+    response = requests.request("POST", url, headers=headers, data=payload)
+    Instagram.userID=json.loads(response.text)["user_id"]
+    url = "https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=0149bba19845b9bcec89ac6de267d554&access_token="+json.loads(response.text)["access_token"]
+    response = requests.request("GET", url)
 
 
-#app = Flask('app')
-#@app.route('/')
+    Instagram.accessToken=json.loads(response.text)["access_token"]
+    Instagram.accessTokenExpireIn =json.loads(response.text)["expires_in"]
 
-#def run():
-#    return '<h1>Hello, Server!</h1>'
+    
+async def getFeedInstagram(ctx):
+    url = "https://graph.instagram.com/me/media?fields=id,caption,media_url,media_type&access_token="+Instagram.accessToken
 
-#app.run(host = '0.0.0.0', port = 8080)
+    response = requests.request("GET", url)
+    medias=json.loads(response.text)["data"]
+    listPhoto=[]
+    listPhotoHorizontal=[]
+        
+    for i in range (len(medias)):
+        if(medias[i]["media_type"]=="IMAGE"):
+            listPhoto.append(medias[i]["media_url"])
+    imageToSend=""
+    cpt=0
+    for j in range (len(listPhoto)-1):
+        if(imageToSend==""):
+            imagToConcat1 = Image.open(BytesIO(requests.get(listPhoto[j]).content))
+            imagToConcat2 = Image.open(BytesIO(requests.get(listPhoto[j+1]).content))
+            imageToSend=get_concat_h(imagToConcat1, imagToConcat2)
+            cpt+=1
+        else:
+            imageToSend=get_concat_h(imageToSend, Image.open(BytesIO(requests.get(listPhoto[j+1]).content)))
+            cpt+=1
+            if(cpt==3):
+                listPhotoHorizontal.append(imageToSend)
+                imageToSend=""
+                cpt=0
+                j+=1
+
+    for i in range (len(listPhotoHorizontal)):
+        if(i==0):
+            imageToSend=listPhotoHorizontal[i]
+        else:
+            imageToSend=get_concat_v(imageToSend, listPhotoHorizontal[i])
+                    
+        
+
+    with BytesIO() as image_binary:
+                    imageToSend.save(image_binary, 'PNG')
+                    image_binary.seek(0)
+                    await ctx.send(file=discord.File(fp=image_binary, filename='image.png'))
+
+
 
 '''
-
-
-
-
-
-
-
-
-
-
-@client.event
-async def on_ready():
-    print('Ready!')
-
-
-
-@client.command()
-async def select(ctx):
-    await ctx.send("Select", components = [
-        Select(
-            placeholder = "Select something!",
-            options = [
-                SelectOption(label="A", value="A"),
-                SelectOption(label="B", value="B")
-            ]
-        )
-    ])
-
-    while True:
-        try:
-            select_interaction = await client.wait_for("select_option")
-            await select_interaction.send(content = f"{select_interaction.values[0]} selected!", ephemeral = False)
-        except:
-            await ctx.send("test")
-    
-
-client.run(os.getenv("token"))
-
-
