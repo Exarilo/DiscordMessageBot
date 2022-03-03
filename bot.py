@@ -80,11 +80,13 @@ async def on_reaction_add(reaction, user):
         Feed.currentIndex-=1
         if(Feed.currentIndex<0):
             Feed.currentIndex=len(Feed.listPhoto)-1
+            setFeedEmbed()
     if str(reaction.emoji) == "▶️":      
         Feed.currentIndex+=1
         if(Feed.currentIndex==len(Feed.listPhoto)):
             Feed.currentIndex=0
-            await reaction.message.remove_reaction()
+        setFeedEmbed()
+            #await reaction.message.remove_reaction()
 
 @client.command()
 async def send(ctx,*,message):
