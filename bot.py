@@ -10,13 +10,31 @@ from dotenv import load_dotenv
 from Twitter import *
 from Instagram import *
 from Tools import *
-
+import urllib.request as urllib2
+import base64
 
 
 listChannels=["twitter","instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
 load_dotenv()
 client = commands.Bot("!")
 DiscordComponents(client)
+
+
+
+@client.command()
+async def video(ctx):
+    clip = (VideoFileClip("https://scontent.cdninstagram.com/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4?_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a%27,%20scheme=%27https%27,%20host=%27instagram.fcdg1-1.fna.fbcdn.net%27,%20tld=%27net%27,%20host_type=%27domain%27,%20port=%27443%27,%20path=%27/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4%27,%20query=%27_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a"))
+    #await ctx.channel.send(clip.filename)
+    contents = urllib2.urlopen(clip.filename).read()
+    contents= BytesIO(contents)
+
+
+
+    await ctx.send(file=discord.File(fp= contents, filename='test.gif'))
+
+
+
+
 
 
 @client.command()
@@ -62,10 +80,10 @@ async def on_button_click(interaction):
                 await createButton(interaction.channel,[interaction.channel.name],"Error, try again...",Instagram.ButtonsSignIn,client)
                 return
         elif(currentAction=="Feed"):
-            await getFeedInstagram2(ctx=interaction.channel)
+            await getFeedInstagram(ctx=interaction.channel)
 
-        elif(currentAction=="Update channel"):
-            todo="TODO"
+        elif(currentAction=="Direct Message"):
+            await getUserMessages(ctx=interaction.channel)
         await createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Instagram.ButtonsUpdates,client)
 
 
@@ -76,17 +94,26 @@ async def on_reaction_add(reaction, user):
         if str(reaction.emoji) == "❌":
             await reaction.message.delete()
     
-    if str(reaction.emoji) == "◀️":
-        Feed.currentIndex-=1
-        if(Feed.currentIndex<0):
-            Feed.currentIndex=len(Feed.listPhoto)-1
+    if(user.display_name!="MessagesBot"):
+        if str(reaction.emoji) == "◀️":
+            Feed.currentIndex-=1
+            if(Feed.currentIndex<0):
+                Feed.currentIndex=len(Feed.listPhoto)-1
             setFeedEmbed()
-    if str(reaction.emoji) == "▶️":      
-        Feed.currentIndex+=1
-        if(Feed.currentIndex==len(Feed.listPhoto)):
-            Feed.currentIndex=0
-        setFeedEmbed()
-            #await reaction.message.remove_reaction()
+            await Feed.messageEmbed.remove_reaction(reaction, user)
+            await Feed.messageEmbed.edit(embed=Feed.embed)
+            await Feed.messageEmbed.add_reaction('◀️')
+            await Feed.messageEmbed.add_reaction('▶️') 
+        if str(reaction.emoji) == "▶️":      
+            Feed.currentIndex+=1
+            if(Feed.currentIndex==len(Feed.listPhoto)):
+                Feed.currentIndex=0
+            setFeedEmbed()
+            await Feed.messageEmbed.remove_reaction(reaction, user)
+            await Feed.messageEmbed.edit(embed=Feed.embed)
+            await Feed.messageEmbed.add_reaction('◀️')
+            await Feed.messageEmbed.add_reaction('▶️') 
+
 
 @client.command()
 async def send(ctx,*,message):
