@@ -23,13 +23,10 @@ DiscordComponents(client)
 
 @client.command()
 async def video(ctx):
-    clip = (VideoFileClip("https://scontent.cdninstagram.com/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4?_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a%27,%20scheme=%27https%27,%20host=%27instagram.fcdg1-1.fna.fbcdn.net%27,%20tld=%27net%27,%20host_type=%27domain%27,%20port=%27443%27,%20path=%27/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4%27,%20query=%27_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a"))
+    url="https://scontent.cdninstagram.com/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4?_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a%27,%20scheme=%27https%27,%20host=%27instagram.fcdg1-1.fna.fbcdn.net%27,%20tld=%27net%27,%20host_type=%27domain%27,%20port=%27443%27,%20path=%27/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4%27,%20query=%27_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a"
     #await ctx.channel.send(clip.filename)
-    contents = urllib2.urlopen(clip.filename).read()
+    contents = urllib2.urlopen(url).read()
     contents= BytesIO(contents)
-
-
-
     await ctx.send(file=discord.File(fp= contents, filename='test.gif'))
 
 
