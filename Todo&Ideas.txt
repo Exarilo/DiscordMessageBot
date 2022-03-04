@@ -8,9 +8,6 @@
 2) Set the callback url to the website
 3) Improve Embed to send non-pixelated images
 
-#----------------------------------------------INSTAGRAM---------------------------------------------------------------#
-1) Refresh/Long life token
-
 #----------------------------------------------IDEAS-------------------------------------------------------------------#
 1) Add roles to hide messages for other users
 2) Send messages on multiple social network
