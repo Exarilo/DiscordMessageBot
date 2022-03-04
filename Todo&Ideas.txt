@@ -16,3 +16,5 @@
 2) Send messages on multiple social network
 3) Add a link button for Sign In
 4) Send a pdf with messages history
+5) Create a channel Parameter
+6) Add the possibility to auto read message with /tss
