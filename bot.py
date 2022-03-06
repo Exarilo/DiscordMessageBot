@@ -12,7 +12,7 @@ from Instagram import *
 from Tools import *
 import urllib.request as urllib2
 import base64
-
+from moviepy.editor import *
 
 listChannels=["twitter","instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
 load_dotenv()
@@ -23,16 +23,21 @@ DiscordComponents(client)
 
 @client.command()
 async def video(ctx):
-    url="https://scontent.cdninstagram.com/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4?_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a%27,%20scheme=%27https%27,%20host=%27instagram.fcdg1-1.fna.fbcdn.net%27,%20tld=%27net%27,%20host_type=%27domain%27,%20port=%27443%27,%20path=%27/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4%27,%20query=%27_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a"
- 
-    #contents = urllib2.urlopen(url).read()
+    #url="https://scontent.cdninstagram.com/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4?_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a%27,%20scheme=%27https%27,%20host=%27instagram.fcdg1-1.fna.fbcdn.net%27,%20tld=%27net%27,%20host_type=%27domain%27,%20port=%27443%27,%20path=%27/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4%27,%20query=%27_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a"
+    url="https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif"
+    #url = (VideoFileClip(url))
+    contents = urllib2.urlopen(url).read()
     #contents= BytesIO(contents)
+    name="img"
+    image_file = discord.File(BytesIO(contents),filename=f"{name}.gif")
+    await ctx.send(file=image_file )
+
     #url="https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif"
     embed=discord.Embed(title="ENTER YOUR USERNAME : ",url="https://www.instagram.com",description="")
-    embed.video=url
+    embed.set_image(url="attachment://img.gif.")
     await ctx.send(embed=embed)
     #await ctx.channel.send(clip.filename)
-
+    a=1
     #await ctx.send(file=discord.File(fp= contents, filename='test.gif'))
 
 
