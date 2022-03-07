@@ -95,7 +95,7 @@ class Instagram:
 
 
     async def getFeedInstagram(ctx):
-        await Instagram.fillMediaClass(ctx)
+        await Instagram.fillMediaClass()
         Instagram.setFeedEmbed()
         message = await ctx.send(embed=Feed.embed)
         Feed.messageEmbed=message
