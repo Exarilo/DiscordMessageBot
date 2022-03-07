@@ -12,7 +12,6 @@ from instagrapi import Client
 import urllib.request
 from moviepy.editor import * #pip install MoviePy
 #from instagram.client import InstagramAPI
-
 cl = Client()
 
 class Feed:
@@ -64,38 +63,43 @@ class Instagram:
         #TypeImg
         medias=cl.user_medias(User.pk,amount=10)
         for i in range (len(medias)):
+            if(medias[i].thumbnail_url in Feed.listPhoto):
+                continue        
             if(medias[i].media_type==1):
                 Feed.listPhoto.append(medias[i].thumbnail_url)
                 Feed.listTxtPhoto.append(medias[i].caption_text)
             if(medias[i].media_type==2):
-                #video =urllib.request.urlretrieve(medias[i].video_url, 'video_name.mp4') 
-                
-                clip = (VideoFileClip(medias[i].video_url))
-                #Image.open(BytesIO(requests.get(listPhoto[j+1]).content)
+                Feed.listPhoto.append(medias[i].thumbnail_url)
+                Feed.listTxtPhoto.append(medias[i].video_url)
+            if(medias[i].media_type==8):
+                Feed.listPhoto.append(medias[i].resources[0].thumbnail_url)
+                Feed.listTxtPhoto.append(medias[i].caption_text)
                 '''
-                with BytesIO() as image_binary:
-                                clip.save(image_binary, 'gif')
-                                image_binary.seek(0)
-                                await ctx.send(file=discord.File(fp=image_binary, filename='image.gif'))
-                                '''
+                imagConcat = Image.open(BytesIO(requests.get(medias[i].resources[0].thumbnail_url).content))
+                for j in range(len(medias[i].resources)):
+                    imagToConcat = Image.open(BytesIO(requests.get(medias[0].resources[j].thumbnail_url).content))
+                    imagConcat=Instagram.get_concat_v(imagConcat, imagToConcat)   
 
-
-                clip.write_gif("output.gif",program='ffmpeg')
-                Feed.listVideo.append(medias[i].thumbnail_url)
-                Feed.listTxtVideo.append(medias[i].caption_text)
+                Feed.listPhoto.append(imagConcat)
+                Feed.listTxtPhoto.append(medias[i].caption_text)
+                '''
 
     def setFeedEmbed():
         embed=discord.Embed(title="FEED INSTAGRAM",url="https://www.instagram.com",color=0xbe6e2d)
         embed.set_author(name=User.username,url=User.pic)
         embed.set_image(url=Feed.listPhoto[Feed.currentIndex])
-        if(Feed.listTxtPhoto[Feed.currentIndex]!=""):
+        if(Feed.listTxtPhoto[Feed.currentIndex][0:4]=="http"):
+            embed.add_field(name="-",value="[--> VIDEO LINK <--]("+Feed.listTxtPhoto[Feed.currentIndex]+")",inline=False)
+        elif(Feed.listTxtPhoto[Feed.currentIndex]!=""):
             embed.set_footer(text=Feed.listTxtPhoto[Feed.currentIndex])
+
         Feed.embed=embed
 
 
+   
 
     async def getFeedInstagram(ctx):
-        await Instagram.fillMediaClass()
+        Instagram.fillMediaClass()
         Instagram.setFeedEmbed()
         message = await ctx.send(embed=Feed.embed)
         Feed.messageEmbed=message
@@ -113,6 +117,12 @@ class Instagram:
             user=cl.user_info(messages[i].user_id)
             embed.add_field(name=user.username, value=messages[i].text, inline=False)
         await ctx.send(embed=embed)
+
+    def get_concat_v(im1, im2):
+        dst = Image.new('RGB', (im1.width, im1.height + im2.height))
+        dst.paste(im1, (0, 0))
+        dst.paste(im2, (0, im1.height))
+        return dst    
 '''
 
 async def getFeedInstagram(ctx):
