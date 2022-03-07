@@ -36,83 +36,83 @@ class Instagram:
     ButtonsUpdates=[Button(label="Feed", style="1", custom_id="btFeed"),Button(label="Direct Message", style="3", custom_id="btUpdate"),Button(label="Delete Messages", style="4", custom_id="btDelete")]
 
 
-async def SignInInstagram(ctx,client):
-    embed=discord.Embed(title="ENTER YOUR USERNAME : ",url="https://www.instagram.com",description="")
-    await ctx.send(embed=embed)
-    msg = await client.wait_for('message', check=None, timeout=None)
-    await ctx.purge()
-    username=msg.content
-    embed=discord.Embed(title="ENTER YOUR PASSWORD : ",url="https://www.instagram.com",description="")
-    await ctx.send(embed=embed)
-    msg = await client.wait_for('message', check=None, timeout=None)
-    await ctx.purge()
-    password=msg.content
-    msg = await ctx.send("Connecting your account ...")
-    cl.login(username, password)
-    userInfo=cl.user_info(cl.user_id)
-    User.pk=userInfo.pk
-    User.username=userInfo.username
-    User.pic=userInfo.profile_pic_url
+    async def SignInInstagram(ctx,client):
+        embed=discord.Embed(title="ENTER YOUR USERNAME : ",url="https://www.instagram.com",description="")
+        await ctx.send(embed=embed)
+        msg = await client.wait_for('message', check=None, timeout=None)
+        await ctx.purge()
+        username=msg.content
+        embed=discord.Embed(title="ENTER YOUR PASSWORD : ",url="https://www.instagram.com",description="")
+        await ctx.send(embed=embed)
+        msg = await client.wait_for('message', check=None, timeout=None)
+        await ctx.purge()
+        password=msg.content
+        msg = await ctx.send("Connecting your account ...")
+        cl.login(username, password)
+        userInfo=cl.user_info(cl.user_id)
+        User.pk=userInfo.pk
+        User.username=userInfo.username
+        User.pic=userInfo.profile_pic_url
 
-    embed=discord.Embed(title=User.username,description="succefuly connected !", url="https://www.instagram.com", color=0x1fa335)
-    embed.set_image(url=User.pic)
-    await msg.delete()
-    await ctx.send(embed=embed)
-
-
-def fillMediaClass():
-    #TypeImg
-    medias=cl.user_medias(User.pk,amount=10)
-    for i in range (len(medias)):
-        if(medias[i].media_type==1):
-            Feed.listPhoto.append(medias[i].thumbnail_url)
-            Feed.listTxtPhoto.append(medias[i].caption_text)
-        if(medias[i].media_type==2):
-            #video =urllib.request.urlretrieve(medias[i].video_url, 'video_name.mp4') 
-            
-            clip = (VideoFileClip(medias[i].video_url))
-            #Image.open(BytesIO(requests.get(listPhoto[j+1]).content)
-            '''
-            with BytesIO() as image_binary:
-                            clip.save(image_binary, 'gif')
-                            image_binary.seek(0)
-                            await ctx.send(file=discord.File(fp=image_binary, filename='image.gif'))
-                            '''
+        embed=discord.Embed(title=User.username,description="succefuly connected !", url="https://www.instagram.com", color=0x1fa335)
+        embed.set_image(url=User.pic)
+        await msg.delete()
+        await ctx.send(embed=embed)
 
 
-            clip.write_gif("output.gif",program='ffmpeg')
-            Feed.listVideo.append(medias[i].thumbnail_url)
-            Feed.listTxtVideo.append(medias[i].caption_text)
-
-def setFeedEmbed():
-    embed=discord.Embed(title="FEED INSTAGRAM",url="https://www.instagram.com",color=0xbe6e2d)
-    embed.set_author(name=User.username,url=User.pic)
-    embed.set_image(url=Feed.listPhoto[Feed.currentIndex])
-    if(Feed.listTxtPhoto[Feed.currentIndex]!=""):
-        embed.set_footer(text=Feed.listTxtPhoto[Feed.currentIndex])
-    Feed.embed=embed
-
-
-
-async def getFeedInstagram(ctx):
-    await fillMediaClass(ctx)
-    setFeedEmbed()
-    message = await ctx.send(embed=Feed.embed)
-    Feed.messageEmbed=message
-    await message.add_reaction('◀️')
-    await message.add_reaction('▶️')    
+    def fillMediaClass():
+        #TypeImg
+        medias=cl.user_medias(User.pk,amount=10)
+        for i in range (len(medias)):
+            if(medias[i].media_type==1):
+                Feed.listPhoto.append(medias[i].thumbnail_url)
+                Feed.listTxtPhoto.append(medias[i].caption_text)
+            if(medias[i].media_type==2):
+                #video =urllib.request.urlretrieve(medias[i].video_url, 'video_name.mp4') 
+                
+                clip = (VideoFileClip(medias[i].video_url))
+                #Image.open(BytesIO(requests.get(listPhoto[j+1]).content)
+                '''
+                with BytesIO() as image_binary:
+                                clip.save(image_binary, 'gif')
+                                image_binary.seek(0)
+                                await ctx.send(file=discord.File(fp=image_binary, filename='image.gif'))
+                                '''
 
 
-async def getUserMessages(ctx):
-    thread=cl.direct_threads(1)[0]
-    messages=thread.messages
-    embed=discord.Embed(title="MESSAGES", url="https://www.instagram.com",color=0x9e65d7)
-    embed.set_thumbnail(url=thread.inviter.profile_pic_url)
-    
-    for i in range(len(messages)):
-        user=cl.user_info(messages[i].user_id)
-        embed.add_field(name=user.username, value=messages[i].text, inline=False)
-    await ctx.send(embed=embed)
+                clip.write_gif("output.gif",program='ffmpeg')
+                Feed.listVideo.append(medias[i].thumbnail_url)
+                Feed.listTxtVideo.append(medias[i].caption_text)
+
+    def setFeedEmbed():
+        embed=discord.Embed(title="FEED INSTAGRAM",url="https://www.instagram.com",color=0xbe6e2d)
+        embed.set_author(name=User.username,url=User.pic)
+        embed.set_image(url=Feed.listPhoto[Feed.currentIndex])
+        if(Feed.listTxtPhoto[Feed.currentIndex]!=""):
+            embed.set_footer(text=Feed.listTxtPhoto[Feed.currentIndex])
+        Feed.embed=embed
+
+
+
+    async def getFeedInstagram(ctx):
+        await Instagram.fillMediaClass(ctx)
+        Instagram.setFeedEmbed()
+        message = await ctx.send(embed=Feed.embed)
+        Feed.messageEmbed=message
+        await message.add_reaction('◀️')
+        await message.add_reaction('▶️')    
+
+
+    async def getUserMessages(ctx):
+        thread=cl.direct_threads(1)[0]
+        messages=thread.messages
+        embed=discord.Embed(title="MESSAGES", url="https://www.instagram.com",color=0x9e65d7)
+        embed.set_thumbnail(url=thread.inviter.profile_pic_url)
+        
+        for i in range(len(messages)):
+            user=cl.user_info(messages[i].user_id)
+            embed.add_field(name=user.username, value=messages[i].text, inline=False)
+        await ctx.send(embed=embed)
 '''
 
 async def getFeedInstagram(ctx):
