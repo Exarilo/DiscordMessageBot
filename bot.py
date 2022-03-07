@@ -3,7 +3,7 @@
 #---------------------------------------------------------------------------------------------------------------------    
 from pickle import TRUE
 import discord
-from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
+from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select,ButtonStyle
 import discord.ext.commands as commands
 from fpdf import FPDF
 from dotenv import load_dotenv
@@ -14,6 +14,7 @@ import urllib.request as urllib2
 import base64
 from moviepy.editor import *
 
+
 listChannels=["twitter","instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
 load_dotenv()
 client = commands.Bot("!")
@@ -23,7 +24,14 @@ DiscordComponents(client)
 
 @client.command()
 async def video(ctx):
-    #url="https://scontent.cdninstagram.com/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4?_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a%27,%20scheme=%27https%27,%20host=%27instagram.fcdg1-1.fna.fbcdn.net%27,%20tld=%27net%27,%20host_type=%27domain%27,%20port=%27443%27,%20path=%27/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4%27,%20query=%27_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a"
+        
+    ButtonsUpdates=[Button(label="Feed", style="1", custom_id="btFeed"),Button(label="Direct Message", style="3", custom_id="btUpdate"),Button(label="Delete Messages", style="4", custom_id="btDelete")]
+    embed=discord.Embed(title="ENTER YOUR USERNAME : ",url="https://www.instagram.com",description="")
+    #embed.set_footer(text="https://www.google.com/?client=safari",icon_url="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3fwDfYfJoyfIsa5rKck0IMaF05qNPDsRt7Q&usqp=CAU")
+    embed.add_field(name="aaaa",value="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3fwDfYfJoyfIsa5rKck0IMaF05qNPDsRt7Q&usqp=CAU",inline=False)
+    await ctx.send(embed=embed)
+
+   #url="https://scontent.cdninstagram.com/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4?_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a%27,%20scheme=%27https%27,%20host=%27instagram.fcdg1-1.fna.fbcdn.net%27,%20tld=%27net%27,%20host_type=%27domain%27,%20port=%27443%27,%20path=%27/v/t50.16885-16/275268746_4831225750302025_2630281466842630322_n.mp4%27,%20query=%27_nc_ht=instagram.fcdg1-1.fna.fbcdn.net&_nc_cat=101&_nc_ohc=J8uZDQrng3oAX_iQzHY&edm=APU89FABAAAA&ccb=7-4&oe=62248AC0&oh=00_AT8jqfsNaXcqKql5e75uANpd8r82_4NuKfj27YIuzPOvjA&_nc_sid=86f79a"
     url="https://upload.wikimedia.org/wikipedia/commons/2/2c/Rotating_earth_%28large%29.gif"
     #url = (VideoFileClip(url))
     contents = urllib2.urlopen(url).read()
@@ -74,24 +82,24 @@ async def on_button_click(interaction):
 
     if(interaction.channel.name=="twitter"):
         if(currentAction=="Sign in"):
-            await SignInTwitter(ctx=interaction.channel,client=client)
+            await Twitter.SignInTwitter(ctx=interaction.channel,client=client)
         elif(currentAction=="Update channel"):
-            await updateTwitter(ctx=interaction.channel)
+            await Twitter.updateTwitter(ctx=interaction.channel)
         await createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Twitter.ButtonsUpdates,client)
     
     
     elif(interaction.channel.name=="instagram"):
         if(currentAction=="Sign in"):
             try:
-                await SignInInstagram(ctx=interaction.channel,client=client)
+                await Instagram.SignInInstagram(ctx=interaction.channel,client=client)
             except:
                 await createButton(interaction.channel,[interaction.channel.name],"Error, try again...",Instagram.ButtonsSignIn,client)
                 return
         elif(currentAction=="Feed"):
-            await getFeedInstagram(ctx=interaction.channel)
+            await Instagram.getFeedInstagram(ctx=interaction.channel)
 
         elif(currentAction=="Direct Message"):
-            await getUserMessages(ctx=interaction.channel)
+            await Instagram.getUserMessages(ctx=interaction.channel)
         await createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Instagram.ButtonsUpdates,client)
 
 
@@ -107,7 +115,7 @@ async def on_reaction_add(reaction, user):
             Feed.currentIndex-=1
             if(Feed.currentIndex<0):
                 Feed.currentIndex=len(Feed.listPhoto)-1
-            setFeedEmbed()
+            Instagram.setFeedEmbed()
             await Feed.messageEmbed.remove_reaction(reaction, user)
             await Feed.messageEmbed.edit(embed=Feed.embed)
             await Feed.messageEmbed.add_reaction('◀️')
@@ -116,7 +124,7 @@ async def on_reaction_add(reaction, user):
             Feed.currentIndex+=1
             if(Feed.currentIndex==len(Feed.listPhoto)):
                 Feed.currentIndex=0
-            setFeedEmbed()
+            Instagram.setFeedEmbed()
             await Feed.messageEmbed.remove_reaction(reaction, user)
             await Feed.messageEmbed.edit(embed=Feed.embed)
             await Feed.messageEmbed.add_reaction('◀️')
