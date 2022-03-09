@@ -10,7 +10,7 @@ from PIL import Image
 from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
 from instagrapi import Client
 import urllib.request
-from moviepy.editor import * #pip install MoviePy
+#from moviepy.editor import * #pip install MoviePy
 #from instagram.client import InstagramAPI
 cl = Client()
 
@@ -28,12 +28,12 @@ class User:
     pic = []
     feed=""
 class Instagram:
-    accessToken = ""
-    accessTokenExpireIn=""
-    userID=""
+    #accessToken = ""
+    #accessTokenExpireIn=""
+    #userID=""
     ButtonsSignIn = [Button(label="Sign in", style="1", custom_id="btSignIn"),Button(label="Delete channel", style="4", custom_id="btDeleteChan")]
     ButtonsUpdates=[Button(label="Feed", style="1", custom_id="btFeed"),Button(label="Direct Message", style="3", custom_id="btUpdate"),Button(label="Delete Messages", style="4", custom_id="btDelete")]
-
+    lastMessageId=""
 
     async def SignInInstagram(ctx,client):
         embed=discord.Embed(title="ENTER YOUR USERNAME : ",url="https://www.instagram.com",description="")
@@ -109,20 +109,25 @@ class Instagram:
 
     async def getUserMessages(ctx):
         thread=cl.direct_threads(1)[0]
+        Instagram.lastMessageId=thread.id
         messages=thread.messages
         embed=discord.Embed(title="MESSAGES", url="https://www.instagram.com",color=0x9e65d7)
         embed.set_thumbnail(url=thread.inviter.profile_pic_url)
         
         for i in range(len(messages)):
-            user=cl.user_info(messages[i].user_id)
-            embed.add_field(name=user.username, value=messages[i].text, inline=False)
+            user=cl.user_info(messages[len(messages)-i-1].user_id)
+            embed.add_field(name=user.username, value=messages[len(messages)-i-1].text, inline=False)
         await ctx.send(embed=embed)
 
     def get_concat_v(im1, im2):
         dst = Image.new('RGB', (im1.width, im1.height + im2.height))
         dst.paste(im1, (0, 0))
         dst.paste(im2, (0, im1.height))
-        return dst    
+        return dst   
+    async def replyMessage(message):
+        cl.direct_answer(Instagram.lastMessageId, message)
+        
+
 '''
 
 async def getFeedInstagram(ctx):
