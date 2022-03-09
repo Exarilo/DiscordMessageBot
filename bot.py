@@ -83,7 +83,7 @@ async def on_button_click(interaction):
         if(currentAction=="Sign in"):
             await Twitter.SignInTwitter(ctx=interaction.channel,client=client)
         elif(currentAction=="Update channel"):
-            await Twitter.updateTwitter(ctx=interaction.channel)
+            await Twitter.getUserMessages(ctx=interaction.channel)
         await createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Twitter.ButtonsUpdates,client)
     
     
@@ -105,9 +105,9 @@ async def on_button_click(interaction):
             
 @client.event
 async def on_reaction_add(reaction, user):
-    if user != client.user:
-        if str(reaction.emoji) == "❌":
-            await reaction.message.delete()
+    #if user != client.user:
+    #    if str(reaction.emoji) == "❌":
+    #        await reaction.message.delete()
     
     if(user.display_name!="MessagesBot"):
         if str(reaction.emoji) == "◀️":
