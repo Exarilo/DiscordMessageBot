@@ -12,7 +12,6 @@ from Instagram import *
 from Tools import *
 import urllib.request as urllib2
 import base64
-from moviepy.editor import *
 
 
 listChannels=["twitter","instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
@@ -135,10 +134,14 @@ async def on_reaction_add(reaction, user):
 async def send(ctx,*,message):
     if(len(ctx.message.mentions)>0):
         if(ctx.message.mentions[0].name=="MessagesBot"):
-            Twitter.api.update_status(in_reply_to_status_id=int(tweetByIDs.get(ctx.message.reference.message_id)[0]), status="@"+tweetByIDs.get(ctx.message.reference.message_id)[1]+" "+message)
-            
+            if(ctx.channel.name=="twitter"):
+                Twitter.api.update_status(in_reply_to_status_id=int(tweetByIDs.get(ctx.message.reference.message_id)[0]), status="@"+tweetByIDs.get(ctx.message.reference.message_id)[1]+" "+message)
+            elif(ctx.channel.name=="instagram"):
+                await Instagram.replyMessage(message)
     else:
-        Twitter.api.update_status(status=message,auto_populate_reply_metadata=True)
+        if(ctx.channel.name=="twitter"):
+            Twitter.api.update_status(status=message,auto_populate_reply_metadata=True)
+
     await ctx.channel.send("Message sended !")
 
 
