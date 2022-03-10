@@ -108,7 +108,18 @@ async def manageEmbedReaction(message,embed,reaction, user):
     await message.edit(embed=embed)
     await message.add_reaction('◀️')
     await message.add_reaction('▶️') 
-                 
+
+def  manageIndex(reaction,index,maxIndex):
+    if str(reaction.emoji) == "◀️":
+        index-=1
+        if(index<0):
+            index=maxIndex-1
+    if str(reaction.emoji) == "▶️":      
+        index+=1
+        if(index==maxIndex):
+            index=0
+    return index
+              
 @client.event
 async def on_reaction_add(reaction, user):
     #if user != client.user:
@@ -117,31 +128,15 @@ async def on_reaction_add(reaction, user):
     
     if(user.display_name!="MessagesBot"):
         if(reaction.message.channel.name=="instagram"):
-            if str(reaction.emoji) == "◀️":
-                Feed.currentIndex-=1
-                if(Feed.currentIndex<0):
-                    Feed.currentIndex=len(Feed.listPhoto)-1
-                Instagram.setFeedEmbed()
-                await manageEmbedReaction(Feed.messageEmbed,Feed.embed,reaction,user)
-            if str(reaction.emoji) == "▶️":      
-                Feed.currentIndex+=1
-                if(Feed.currentIndex==len(Feed.listPhoto)):
-                    Feed.currentIndex=0
-                Instagram.setFeedEmbed()
-                await manageEmbedReaction(Feed.messageEmbed,Feed.embed,reaction,user) 
+            Feed.currentIndex=manageIndex(reaction,Feed.currentIndex,len(Feed.listPhoto))
+            Instagram.setFeedEmbed()
+            await manageEmbedReaction(Feed.messageEmbed,Feed.embed,reaction,user)
+
         elif(reaction.message.channel.name=="twitter"):
-            if str(reaction.emoji) == "◀️":
-                UserMessages.currentMessageIndex-=1
-                if(UserMessages.currentMessageIndex<0):
-                    UserMessages.currentMessageIndex=len(UserMessages.listUserID)-1
-                Twitter.setMessagesEmbed
-                await manageEmbedReaction(UserMessages.messageEmbed,UserMessages.embed,reaction,user)
-            if str(reaction.emoji) == "▶️":      
-                UserMessages.currentMessageIndex+=1
-                if(UserMessages.currentMessageIndex==len(UserMessages.listUserID)):
-                    UserMessages.currentMessageIndex=0
-                Twitter.setMessagesEmbed
-                await manageEmbedReaction(UserMessages.messageEmbed,UserMessages.embed,reaction,user)        
+            UserMessages.currentMessageIndex =manageIndex(reaction,UserMessages.currentMessageIndex,len(UserMessages.listUserID))
+            await Twitter.setMessagesEmbed()
+            await manageEmbedReaction(UserMessages.messageEmbed,UserMessages.embed,reaction,user)
+     
 
 @client.command()
 async def send(ctx,*,message):
