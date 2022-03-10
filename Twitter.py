@@ -15,10 +15,14 @@ class UserTweets:
     listTweets=[]
     currentTweetIndex=0
 class UserMessages:
-    listID=[]
-    listMessages=[]
+    listSender=[]
+    listTxt=[]
+    listRecipient=[]
+    listUserID=[]
     currentMessageIndex=0
-    MessageByID = {} 
+    embed=""
+    messageEmbed=""
+
 class Twitter:
     api = ""
     userName=""
@@ -84,48 +88,50 @@ class Twitter:
             tweetByIDs[message.id] = [ReplytweetID,Mentions[i]['in_reply_to_screen_name']]
             await message.add_reaction('❌') 
 
-    async def getUserMessages(ctx):
+
+    async def FillMessagesClass(ctx):
         messages=Twitter.api.get_direct_messages()['events']
 
         if(len(messages)==0):
             await ctx.send("No messages found !")
             return
-#-----------------------------------------------------
-#-----------------------------------------------------
-#1 recipient contient : 
-#1 userID --> listMessages
-#1 userId --> listMessages
 
-        for i in range(len(messages),0):
-            if(messages[i]['message_create']['target']['recipient_id'] in UserMessages.MessageByID):
-                UserMessages.MessageByID[messages[i]['message_create']['target']['recipient_id']].insert(len(UserMessages.MessageByID[messages[i]['message_create']['sender_id']]),messages[i]['message_create']['message_data']['text'],messages[1]['message_create']['sender_id'])
-            else:
-                UserMessages.MessageByID[messages[i]['message_create']['target']['recipient_id']]=[messages[i]['message_create']['message_data']['text'],messages[1]['message_create']['sender_id']]
-                UserMessages.listID.append(messages[i]['message_create']['target']['recipient_id'])
-#-----------------------------------------------------
-#-----------------------------------------------------
+        for i in range(len(messages)-1,-1,-1):
+            recipientID=messages[i]['message_create']['target']['recipient_id']
+            senderID=messages[i]['message_create']['sender_id']
+            txt=messages[i]['message_create']['message_data']['text']
+            timestamp=messages[i]['created_timestamp']
+            
+            if(recipientID not in UserMessages.listUserID and Twitter.userID!=recipientID):
+                UserMessages.listUserID.append(recipientID)
+            if(senderID not in UserMessages.listUserID and Twitter.userID!=senderID):
+                UserMessages.listUserID.append(recipientID)
+
+            UserMessages.listRecipient.append(recipientID)
+            UserMessages.listSender.append(senderID)
+            UserMessages.listTxt.append(txt)
 
 
-        for i in range(len(messages)):
-            if(messages[len(messages)-i-1]['message_create']['sender_id'] in UserMessages.MessageByID):
-                UserMessages.MessageByID[messages[len(messages)-i-1]['message_create']['sender_id']].insert(len(UserMessages.MessageByID[messages[len(messages)-i-1]['message_create']['sender_id']]),messages[len(messages)-i-1]['message_create']['message_data']['text'])
-            else:
-                UserMessages.MessageByID[messages[len(messages)-i-1]['message_create']['sender_id']]=[messages[len(messages)-i-1]['message_create']['message_data']['text']]
-                UserMessages.listID.append(messages[len(messages)-i-1]['message_create']['sender_id'])
-        await Twitter.setMessagesEmbed(ctx)
+    async def getUserMessages(ctx):
+        await Twitter.FillMessagesClass(ctx)
+        await Twitter.setMessagesEmbed()
+        message = await ctx.send(embed=UserMessages.embed)
+        UserMessages.messageEmbed=message
+        await UserMessages.messageEmbed.add_reaction('◀️')
+        await UserMessages.messageEmbed.add_reaction('▶️')   
 
-    async def setMessagesEmbed(ctx):
-        user=Twitter.api.show_user(id=UserMessages.listID[UserMessages.currentMessageIndex])    
-        
-        UserMessages.MessageByID[UserMessages.listID[UserMessages.currentMessageIndex]]
-        
+    async def setMessagesEmbed():
+        user=Twitter.api.show_user(id=UserMessages.listUserID[UserMessages.currentMessageIndex])    
+     
         embed=discord.Embed(title="MESSAGES",url="https://twitter.com/home",color=0xbe6e2d)
         embed.set_thumbnail(url=user['profile_image_url'])
         
-        for i in range(len(UserMessages.MessageByID[UserMessages.listID[UserMessages.currentMessageIndex]])):
-            embed.add_field(name=user['name'], value=UserMessages.MessageByID[UserMessages.listID[UserMessages.currentMessageIndex]][i], inline=False)
-        await ctx.send(embed=embed)
-        
+        for i in range(len(UserMessages.listRecipient)):
+            if(UserMessages.listSender[i]==str(user['id'])):
+                embed.add_field(name=user['name'], value=UserMessages.listTxt[i], inline=False)
+            elif(UserMessages.listSender[i]==Twitter.userID and UserMessages.listRecipient[i]==str(user['id'])):
+                embed.add_field(name=Twitter.userName, value=UserMessages.listTxt[i], inline=False)
+        UserMessages.embed=embed
         
         
         
