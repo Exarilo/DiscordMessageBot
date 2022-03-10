@@ -102,7 +102,13 @@ async def on_button_click(interaction):
         await createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Instagram.ButtonsUpdates,client)
 
 
-            
+
+async def manageEmbedReaction(message,embed,reaction, user):
+    await message.remove_reaction(reaction, user)
+    await message.edit(embed=embed)
+    await message.add_reaction('◀️')
+    await message.add_reaction('▶️') 
+                 
 @client.event
 async def on_reaction_add(reaction, user):
     #if user != client.user:
@@ -110,25 +116,32 @@ async def on_reaction_add(reaction, user):
     #        await reaction.message.delete()
     
     if(user.display_name!="MessagesBot"):
-        if str(reaction.emoji) == "◀️":
-            Feed.currentIndex-=1
-            if(Feed.currentIndex<0):
-                Feed.currentIndex=len(Feed.listPhoto)-1
-            Instagram.setFeedEmbed()
-            await Feed.messageEmbed.remove_reaction(reaction, user)
-            await Feed.messageEmbed.edit(embed=Feed.embed)
-            await Feed.messageEmbed.add_reaction('◀️')
-            await Feed.messageEmbed.add_reaction('▶️') 
-        if str(reaction.emoji) == "▶️":      
-            Feed.currentIndex+=1
-            if(Feed.currentIndex==len(Feed.listPhoto)):
-                Feed.currentIndex=0
-            Instagram.setFeedEmbed()
-            await Feed.messageEmbed.remove_reaction(reaction, user)
-            await Feed.messageEmbed.edit(embed=Feed.embed)
-            await Feed.messageEmbed.add_reaction('◀️')
-            await Feed.messageEmbed.add_reaction('▶️') 
-
+        if(reaction.message.channel.name=="instagram"):
+            if str(reaction.emoji) == "◀️":
+                Feed.currentIndex-=1
+                if(Feed.currentIndex<0):
+                    Feed.currentIndex=len(Feed.listPhoto)-1
+                Instagram.setFeedEmbed()
+                await manageEmbedReaction(Feed.messageEmbed,Feed.embed,reaction,user)
+            if str(reaction.emoji) == "▶️":      
+                Feed.currentIndex+=1
+                if(Feed.currentIndex==len(Feed.listPhoto)):
+                    Feed.currentIndex=0
+                Instagram.setFeedEmbed()
+                await manageEmbedReaction(Feed.messageEmbed,Feed.embed,reaction,user) 
+        elif(reaction.message.channel.name=="twitter"):
+            if str(reaction.emoji) == "◀️":
+                UserMessages.currentMessageIndex-=1
+                if(UserMessages.currentMessageIndex<0):
+                    UserMessages.currentMessageIndex=len(UserMessages.listUserID)-1
+                Twitter.setMessagesEmbed
+                await manageEmbedReaction(UserMessages.messageEmbed,UserMessages.embed,reaction,user)
+            if str(reaction.emoji) == "▶️":      
+                UserMessages.currentMessageIndex+=1
+                if(UserMessages.currentMessageIndex==len(UserMessages.listUserID)):
+                    UserMessages.currentMessageIndex=0
+                Twitter.setMessagesEmbed
+                await manageEmbedReaction(UserMessages.messageEmbed,UserMessages.embed,reaction,user)        
 
 @client.command()
 async def send(ctx,*,message):
