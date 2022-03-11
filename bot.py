@@ -12,7 +12,7 @@ from Instagram import *
 from Tools import *
 import urllib.request as urllib2
 import base64
-
+import asyncio
 
 listChannels=["twitter","instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
 load_dotenv()
@@ -61,7 +61,7 @@ async def begin(ctx):
         await ctx.guild.create_text_channel(channelToCreate[i],position=i)
     existing_channel = discord.utils.get(ctx.guild.channels).guild.channels
     buttons = [Button(label="Sign in", style="1", custom_id="btSignIn"),Button(label="Delete channel", style="4", custom_id="btDeleteChan")]
-    await createButton(ctx,channelToCreate,"Please sign in before using this channel",buttons,client)
+    await Tools.createButton(ctx,channelToCreate,"Please sign in before using this channel",buttons,client)
 
 @client.command()
 async def stop(ctx):
@@ -82,9 +82,11 @@ async def on_button_click(interaction):
     if(interaction.channel.name=="twitter"):
         if(currentAction=="Sign in"):
             await Twitter.SignInTwitter(ctx=interaction.channel,client=client)
-        elif(currentAction=="Update channel"):
+        elif(currentAction=="Direct Message"):
             await Twitter.getUserMessages(ctx=interaction.channel)
-        await createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Twitter.ButtonsUpdates,client)
+        elif(currentAction=="Mentions"):
+            await Twitter.getMentions(ctx=interaction.channel)
+        await Tools.createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Twitter.ButtonsUpdates,client)
     
     
     elif(interaction.channel.name=="instagram"):
@@ -92,34 +94,17 @@ async def on_button_click(interaction):
             try:
                 await Instagram.SignInInstagram(ctx=interaction.channel,client=client)
             except:
-                await createButton(interaction.channel,[interaction.channel.name],"Error, try again...",Instagram.ButtonsSignIn,client)
+                await Tools.createButton(interaction.channel,[interaction.channel.name],"Error, try again...",Instagram.ButtonsSignIn,client)
                 return
         elif(currentAction=="Feed"):
             await Instagram.getFeedInstagram(ctx=interaction.channel)
 
         elif(currentAction=="Direct Message"):
             await Instagram.getUserMessages(ctx=interaction.channel)
-        await createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Instagram.ButtonsUpdates,client)
+        await Tools.createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Instagram.ButtonsUpdates,client)
 
 
 
-async def manageEmbedReaction(message,embed,reaction, user):
-    await message.remove_reaction(reaction, user)
-    await message.edit(embed=embed)
-    await message.add_reaction('◀️')
-    await message.add_reaction('▶️') 
-
-def  manageIndex(reaction,index,maxIndex):
-    if str(reaction.emoji) == "◀️":
-        index-=1
-        if(index<0):
-            index=maxIndex-1
-    if str(reaction.emoji) == "▶️":      
-        index+=1
-        if(index==maxIndex):
-            index=0
-    return index
-              
 @client.event
 async def on_reaction_add(reaction, user):
     #if user != client.user:
@@ -128,14 +113,14 @@ async def on_reaction_add(reaction, user):
     
     if(user.display_name!="MessagesBot"):
         if(reaction.message.channel.name=="instagram"):
-            Feed.currentIndex=manageIndex(reaction,Feed.currentIndex,len(Feed.listPhoto))
+            Feed.currentIndex=Tools.manageIndexOnReaction(reaction,Feed.currentIndex,len(Feed.listPhoto))
             Instagram.setFeedEmbed()
-            await manageEmbedReaction(Feed.messageEmbed,Feed.embed,reaction,user)
+            await Tools.manageEmbedReaction(Feed.messageEmbed,Feed.embed,reaction,user)
 
         elif(reaction.message.channel.name=="twitter"):
-            UserMessages.currentMessageIndex =manageIndex(reaction,UserMessages.currentMessageIndex,len(UserMessages.listUserID))
+            UserMessages.currentMessageIndex =Tools.manageIndexOnReaction(reaction,UserMessages.currentMessageIndex,len(UserMessages.listUserID))
             await Twitter.setMessagesEmbed()
-            await manageEmbedReaction(UserMessages.messageEmbed,UserMessages.embed,reaction,user)
+            await Tools.manageEmbedReaction(UserMessages.messageEmbed,UserMessages.embed,reaction,user)
      
 
 @client.command()
@@ -143,6 +128,9 @@ async def send(ctx,*,message):
     if(len(ctx.message.mentions)>0):
         if(ctx.message.mentions[0].name=="MessagesBot"):
             if(ctx.channel.name=="twitter"):
+                recipientID=Twitter.api.show_user(id=UserMessages.listUserID[UserMessages.currentMessageIndex])['id']
+                event=Twitter.setJsonMessage(recipientID,message)
+                Twitter.api.post('direct_messages/events/new', params=json.dumps(event))
                 Twitter.api.update_status(in_reply_to_status_id=int(tweetByIDs.get(ctx.message.reference.message_id)[0]), status="@"+tweetByIDs.get(ctx.message.reference.message_id)[1]+" "+message)
             elif(ctx.channel.name=="instagram"):
                 await Instagram.replyMessage(message)
@@ -300,6 +288,8 @@ media = cl.photo_upload(
 @client.event
 async def on_ready():
     print('Ready!')
+    
+
 
 
 
@@ -322,7 +312,7 @@ async def select(ctx):
         except:
             await ctx.send("test")
     
-
 client.run(os.getenv("token"))
+
 
 
