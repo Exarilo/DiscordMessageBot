@@ -29,7 +29,7 @@ class Twitter:
     userID=""
     currentTweetId=""
     ButtonsSignIn = [Button(label="Sign in", style="1", custom_id="btSignIn"),Button(label="Delete channel", style="4", custom_id="btDeleteChan")]
-    ButtonsUpdates=[Button(label="Update channel", style="3", custom_id="btUpdate"),Button(label="Delete Messages", style="4", custom_id="btDelete")]
+    ButtonsUpdates=[Button(label="Direct Message", style="3", custom_id="btMessage"),Button(label="Delete Messages", style="4", custom_id="btDelete"),Button(label="Mentions", style="1", custom_id="btMentions")]
     
 
     async def SignInTwitter(ctx,client):
@@ -57,36 +57,11 @@ class Twitter:
 
         Twitter.userName=response.text.split("&")[3].split("=")[1]
         Twitter.userID=response.text.split("&")[2].split("=")[1]
-    async def updateTwitter(ctx):
-        Mentions = Twitter.api.get_mentions_timeline()
-        isOriginalFound=False
-        ReplytweetID=0
-        for i in range(len(Mentions)) :
-            Replytext= Mentions[i]["text"].partition(' ')[2] 
-            if(Mentions[i]["in_reply_to_status_id"]!=ReplytweetID):
-                ReplytweetID=Mentions[i]["in_reply_to_status_id"]
-                isOriginalFound=False
-            else:
-                isOriginalFound=True
-            ReplyName=Mentions[i]["user"]["name"]
-            ReplyProfilImage=Mentions[i]["user"]["profile_image_url"]
+        user=Twitter.api.show_user(id=Twitter.userID)
+        embed=discord.Embed(title=Twitter.userName,description="succefuly connected !", url="https://twitter.com/home", color=0x1fa335)
+        embed.set_image(url=user['profile_image_url'])
+        await ctx.send(embed=embed)
 
-            if(isOriginalFound==False):
-                OriginalTweet = Twitter.api.show_status(id=ReplytweetID)
-                OriginalText=OriginalTweet["text"]
-                OriginalName=OriginalTweet["user"]["name"]
-                OriginalProfilImage=OriginalTweet["user"]["profile_image_url"]
-                embed=discord.Embed(title=OriginalName,url="https://twitter.com/home", description=OriginalText, color=discord.Color.blue())   
-                embed.set_image(url=OriginalProfilImage)
-                message =await ctx.send("**--------------------- New Message ---------------------**",embed=embed)
-                tweetByIDs[message.id] =[OriginalTweet['id'],OriginalTweet["user"]["name"]]
-                await message.add_reaction('❌')
-                isOriginalFound=True
-            embed=discord.Embed(title=ReplyName,url="https://twitter.com/home", description=Replytext, color=discord.Color.red())   
-            embed.set_thumbnail(url=ReplyProfilImage)
-            message = await ctx.send(embed=embed)  
-            tweetByIDs[message.id] = [ReplytweetID,Mentions[i]['in_reply_to_screen_name']]
-            await message.add_reaction('❌') 
 
 
     async def FillMessagesClass(ctx):
@@ -120,6 +95,7 @@ class Twitter:
         await UserMessages.messageEmbed.add_reaction('◀️')
         await UserMessages.messageEmbed.add_reaction('▶️')   
 
+
     async def setMessagesEmbed():
         user=Twitter.api.show_user(id=UserMessages.listUserID[UserMessages.currentMessageIndex])    
      
@@ -133,10 +109,52 @@ class Twitter:
                 embed.add_field(name=Twitter.userName, value=UserMessages.listTxt[i], inline=False)
         UserMessages.embed=embed
         
-        
-        
-        
+    async def getMentions(ctx):
+        #a=Twitter.api.get_list_statuses()
+        Mentions = Twitter.api.get_mentions_timeline()
+        isOriginalFound=False
+        ReplytweetID=0
+        for i in range(len(Mentions)) :
+            Replytext= Mentions[i]["text"].partition(' ')[2] 
+            if(Mentions[i]["in_reply_to_status_id"]!=ReplytweetID):
+                ReplytweetID=Mentions[i]["in_reply_to_status_id"]
+                isOriginalFound=False
+            else:
+                isOriginalFound=True
+            ReplyName=Mentions[i]["user"]["name"]
 
+            if(isOriginalFound==False):
+                OriginalTweet = Twitter.api.show_status(id=ReplytweetID)
+                OriginalText=OriginalTweet["text"]
+                OriginalName=OriginalTweet["user"]["name"]
+                OriginalProfilImage=OriginalTweet["user"]["profile_image_url"]
+                Twitter.currentTweetId=OriginalTweet['id']
+                isOriginalFound=True
+            
+                embed=discord.Embed(title="TWEET MENTION",url="https://twitter.com/home", description="", color=discord.Color.blue())   
+                embed.add_field(name=OriginalName,value=OriginalText, inline=False)
+                embed.set_thumbnail(url=OriginalProfilImage)
+            embed.add_field(name=ReplyName,value=Replytext, inline=False)
+        message = await ctx.send(embed=embed)  
+        await message.add_reaction('◀️')
+        await message.add_reaction('▶️')   
+        
+        
+    def setJsonMessage(recipientID,message):
+        event = {
+            "event": {
+                "type": "message_create",
+                "message_create": {
+                    "target": {
+                        "recipient_id": recipientID
+                    },
+                "message_data": {
+                    "text": message
+                }
+                }
+            }
+        }
+        return event
         '''
         
         async def getUserTweets(ctx):
@@ -163,33 +181,3 @@ class Twitter:
     '''
             
 
-    async def updateTwitter2(ctx):
-        #a=Twitter.api.get_list_statuses()
-        a=Twitter.api.get_home_timeline()
-        b=Twitter.api.get_direct_messages()
-        Mentions = Twitter.api.get_mentions_timeline()
-        isOriginalFound=False
-        ReplytweetID=0
-        for i in range(len(Mentions)) :
-            Replytext= Mentions[i]["text"].partition(' ')[2] 
-            if(Mentions[i]["in_reply_to_status_id"]!=ReplytweetID):
-                ReplytweetID=Mentions[i]["in_reply_to_status_id"]
-                isOriginalFound=False
-            else:
-                isOriginalFound=True
-            ReplyName=Mentions[i]["user"]["name"]
-
-            if(isOriginalFound==False):
-                OriginalTweet = Twitter.api.show_status(id=ReplytweetID)
-                OriginalText=OriginalTweet["text"]
-                OriginalName=OriginalTweet["user"]["name"]
-                OriginalProfilImage=OriginalTweet["user"]["profile_image_url"]
-                Twitter.currentTweetId=OriginalTweet['id']
-                isOriginalFound=True
-            
-                embed=discord.Embed(title=OriginalName,url="https://twitter.com/home", description=OriginalText, color=discord.Color.blue())   
-                embed.set_thumbnail(url=OriginalProfilImage)
-            embed.add_field(name=ReplyName,value=Replytext)
-        message = await ctx.send(embed=embed)  
-        await message.add_reaction('◀️')
-        await message.add_reaction('▶️')   
