@@ -32,7 +32,7 @@ class Instagram:
     #accessTokenExpireIn=""
     #userID=""
     ButtonsSignIn = [Button(label="Sign in", style="1", custom_id="btSignIn"),Button(label="Delete channel", style="4", custom_id="btDeleteChan")]
-    ButtonsUpdates=[Button(label="Feed", style="1", custom_id="btFeed"),Button(label="Direct Message", style="3", custom_id="btUpdate"),Button(label="Delete Messages", style="4", custom_id="btDelete")]
+    ButtonsUpdates=[Button(label="Feed", style="1", custom_id="btFeed"),Button(label="Direct Message", style="3", custom_id="btMessage"),Button(label="Delete Messages", style="4", custom_id="btDelete")]
     lastMessageId=""
 
     async def SignInInstagram(ctx,client):
