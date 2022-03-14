@@ -1,0 +1,38 @@
+from fbchat import Client
+from fbchat.models import *
+import discord
+import discord.ext.commands as commands
+import fbchat
+from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
+
+class Messenger:
+    #accessToken = ""
+    #accessTokenExpireIn=""
+    #userID=""
+    ButtonsSignIn = [Button(label="Sign in", style="1", custom_id="btSignIn"),Button(label="Delete channel", style="4", custom_id="btDeleteChan")]
+    ButtonsUpdates=[Button(label="Direct Message", style="3", custom_id="btMessage"),Button(label="Delete Messages", style="4", custom_id="btDelete")]
+
+    async def SignInMessenger(ctx,client):
+        embed=discord.Embed(title="ENTER YOUR USERNAME : ",url="https://www.messenger.com",description="")
+        await ctx.send(embed=embed)
+        msg = await client.wait_for('message', check=None, timeout=None)
+        await ctx.purge()
+        username=msg.content
+        embed=discord.Embed(title="ENTER YOUR PASSWORD : ",url="https://www.messenger.com",description="")
+        await ctx.send(embed=embed)
+        msg = await client.wait_for('message', check=None, timeout=None)
+        await ctx.purge()
+        password=msg.content
+        msg = await ctx.send("Connecting your account ...")
+        client = Client.login(email= username,password= password)
+        Client.login()
+        
+        #userInfo=cl.user_info(cl.user_id)
+        #User.pk=userInfo.pk
+        #User.username=userInfo.username
+        #User.pic=userInfo.profile_pic_url
+
+        embed=discord.Embed(title=User.username,description="succefuly connected !", url="https://www.instagram.com", color=0x1fa335)
+        embed.set_image(url=User.pic)
+        await msg.delete()
+        await ctx.send(embed=embed)
