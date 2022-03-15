@@ -13,7 +13,11 @@ from Instagram import *
 from Tools import *
 import urllib.request as urllib2
 import base64
-
+import googleapiclient.discovery #pip install google-api-python-client
+#https://medium.com/mcd-unison/youtube-data-api-v3-in-python-tutorial-with-examples-e829a25d2ebd
+api_service_name = "youtube"
+api_version = "v3"
+DEVELOPER_KEY = 'AIzaSyC3buH4EgaLrNj4tD-DyJwBG4kgy-0WklU'
 
 listChannels=["twitter","instagram","messenger","facebook","snapchat","tiktok","whatsapp","pas-repondu"]
 load_dotenv()
@@ -21,6 +25,24 @@ client = commands.Bot("!")
 DiscordComponents(client)
 
 
+@client.command()
+async def test(ctx):
+    youtube = googleapiclient.discovery.build(
+    api_service_name, api_version, developerKey = DEVELOPER_KEY)
+# 'request' variable is the only thing you must change
+# depending on the resource and method you need to use
+# in your query
+youtube.search().list(
+        part="id,snippet",
+        type='video',
+        q="Spider-Man",
+        videoDuration='short',
+        videoDefinition='high',
+        maxResults=1
+)
+# Query execution
+    response = request.execute()      
+    a=1
 
 @client.command()
 async def video(ctx):
