@@ -4,8 +4,9 @@ import discord
 import discord.ext.commands as commands
 import fbchat
 from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
+from messenger_api import Messenger
 
-class Messenger:
+class Messenger2:
     #accessToken = ""
     #accessTokenExpireIn=""
     #userID=""
@@ -13,19 +14,19 @@ class Messenger:
     ButtonsUpdates=[Button(label="Direct Message", style="3", custom_id="btMessage"),Button(label="Delete Messages", style="4", custom_id="btDelete")]
 
     async def SignInMessenger(ctx,client):
-        embed=discord.Embed(title="ENTER YOUR USERNAME : ",url="https://www.messenger.com",description="")
+
+        embed=discord.Embed(title="ENTER YOUR USERNAME : ",url="https://replit.com/",description="")
         await ctx.send(embed=embed)
         msg = await client.wait_for('message', check=None, timeout=None)
         await ctx.purge()
         username=msg.content
-        embed=discord.Embed(title="ENTER YOUR PASSWORD : ",url="https://www.messenger.com",description="")
+        embed=discord.Embed(title="ENTER YOUR PASSWORD : ",url="https://replit.com/",description="")
         await ctx.send(embed=embed)
-        msg = await client.wait_for('message', check=None, timeout=None)
+        msg2 = await client.wait_for('message', check=None, timeout=None)
         await ctx.purge()
-        password=msg.content
-        msg = await ctx.send("Connecting your account ...")
-        client = Client.login(email= username,password= password)
-        Client.login()
+        password=msg2.content
+        msg2 = await ctx.send("Connecting your account ...")
+        log = Messenger(username, password)
         
         #userInfo=cl.user_info(cl.user_id)
         #User.pk=userInfo.pk
@@ -34,5 +35,5 @@ class Messenger:
 
         embed=discord.Embed(title=User.username,description="succefuly connected !", url="https://www.instagram.com", color=0x1fa335)
         embed.set_image(url=User.pic)
-        await msg.delete()
+        await msg2.delete()
         await ctx.send(embed=embed)
