@@ -5,6 +5,8 @@ import discord.ext.commands as commands
 import fbchat
 from discord_components import DiscordComponents, ComponentsBot, Button, SelectOption, Select
 from messenger_api import Messenger
+import fbchat
+import re
 
 class Messenger2:
     #accessToken = ""
@@ -14,7 +16,10 @@ class Messenger2:
     ButtonsUpdates=[Button(label="Direct Message", style="3", custom_id="btMessage"),Button(label="Delete Messages", style="4", custom_id="btDelete")]
 
     async def SignInMessenger(ctx,client):
-
+        fbchat._util.USER_AGENTS    = ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"]
+        fbchat._state.FB_DTSG_REGEX = re.compile(r'"DTSGInitialData",\[\],{"token":"(.*?)"')
+        client=fbchat.Client()
+        fbchat.c
         embed=discord.Embed(title="ENTER YOUR USERNAME : ",url="https://replit.com/",description="")
         await ctx.send(embed=embed)
         msg = await client.wait_for('message', check=None, timeout=None)
