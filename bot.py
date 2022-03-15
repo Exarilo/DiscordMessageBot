@@ -7,6 +7,7 @@ from discord_components import DiscordComponents, ComponentsBot, Button, SelectO
 import discord.ext.commands as commands
 from fpdf import FPDF
 from dotenv import load_dotenv
+from Messenger import Messenger, Messenger2
 from Twitter import *
 from Instagram import *
 from Tools import *
@@ -98,12 +99,21 @@ async def on_button_click(interaction):
                 return
         elif(currentAction=="Feed"):
             await Instagram.getFeedInstagram(ctx=interaction.channel)
-
+     
         elif(currentAction=="Direct Message"):
             await Instagram.getUserMessages(ctx=interaction.channel)
         await Tools.createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Instagram.ButtonsUpdates,client)
 
-
+    elif(interaction.channel.name=="messenger"):
+        if(currentAction=="Sign in"):
+            try:
+                await Messenger2.SignInMessenger(ctx=interaction.channel,client=client)
+            except:
+                await Tools.createButton(interaction.channel,[interaction.channel.name],"Error, try again...",Instagram.ButtonsSignIn,client)
+                return
+        #elif(currentAction=="Direct Message"):
+            #await Instagram.getUserMessages(ctx=interaction.channel)
+        await Tools.createButton(interaction.channel,[interaction.channel.name],"What do you want to do?",Instagram.ButtonsUpdates,client)
 
 @client.event
 async def on_reaction_add(reaction, user):
