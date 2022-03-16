@@ -14,6 +14,30 @@ from Tools import *
 import urllib.request as urllib2
 import base64
 import googleapiclient.discovery #pip install google-api-python-client
+import fbchat
+import re
+import facebook
+from selenium import webdriver 
+from selenium.webdriver.common.keys import Keys
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+
+options = Options()
+options.add_argument("--headless")
+options.add_argument('--log-level=1')
+driver = webdriver.Chrome(ChromeDriverManager().install(),options=options)
+driver.get("https://www.facebook.com/") 
+email = driver.find_element(By.ID,"email")
+email.send_keys("exarilobot@gmail.com") 
+password = driver.find_element(By.ID,"pass")
+password.send_keys("acefgdbbe89275c") 
+password.send_keys(Keys.RETURN) 
+messengerButton=driver.find_element(By.XPATH,"/html/body/div[1]/div/div[1]/div/div[2]/div[4]/div[1]/div[2]/span/span/div").click()
+a=1
+
+
+
 #https://medium.com/mcd-unison/youtube-data-api-v3-in-python-tutorial-with-examples-e829a25d2ebd
 api_service_name = "youtube"
 api_version = "v3"
@@ -27,6 +51,14 @@ DiscordComponents(client)
 
 @client.command()
 async def test(ctx):
+    graph = facebook.GraphAPI(access_token="EAAQM7sdajSkBAC9EHM2w0LNVIchqNMYKDDeBpCldugY1bvRTNaND4wietuZC0Rpqlncc3woaJBr3OJTZCrkBkgIMlLAnKZCJ4zQKPD7pkt6unOu4oa7ZBCPnzSlrSLsr5DfpWy1EKykujBtpwldZCxiCetFIMHUlLJPi1Jm4QZAGHhnZC2zGXbFhZBzrdoMIxbovFzF8ljQxZBwZDZD", version="2.12")
+    graph.get_auth_url(1140119593192745,"https://zouple.maderyromain.repl.co",["manage_pages","publish_pages"])
+    fbchat._util.USER_AGENTS    = ["Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36"]
+    fbchat._state.FB_DTSG_REGEX = re.compile(r'"DTSGInitialData",\[\],{"token":"(.*?)"')
+    client=fbchat.Client()
+    Client()
+    fbchat.Client("exarilobot@gmail.com","dbbe89275c")
+
     youtube = googleapiclient.discovery.build(
     api_service_name, api_version, developerKey = DEVELOPER_KEY)
 # 'request' variable is the only thing you must change
