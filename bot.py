@@ -29,7 +29,7 @@ options.add_argument('--log-level=1')
 driver = webdriver.Chrome(ChromeDriverManager().install(),options=options)
 driver.get("https://www.facebook.com/") 
 email = driver.find_element(By.ID,"email")
-email.send_keys("exarilobot@gmail.com") 
+email.send_keys("exarildzobot@gmail.com") 
 password = driver.find_element(By.ID,"pass")
 password.send_keys("acefgdbbe89275c") 
 password.send_keys(Keys.RETURN) 
@@ -57,7 +57,7 @@ async def test(ctx):
     fbchat._state.FB_DTSG_REGEX = re.compile(r'"DTSGInitialData",\[\],{"token":"(.*?)"')
     client=fbchat.Client()
     Client()
-    fbchat.Client("exarilobot@gmail.com","dbbe89275c")
+    fbchat.Client("exasfrilobot@gmail.com","acefgdbbe89275c")
 
     youtube = googleapiclient.discovery.build(
     api_service_name, api_version, developerKey = DEVELOPER_KEY)
